@@ -8,15 +8,20 @@
 <style>
   :root{
     --bg:#000;
-    --panel:#0f1115;
-    --panel2:#171a21;
-    --line:#262b35;
-    --txt:#e8edf4;
+    --panel:#0b0e14;
+    --panel2:#12161f;
+    --panel3:#171c27;
+    --line:#222836;
+    --line2:#2c3444;
+    --txt:#eef2f8;
     --muted:#8b94a6;
+    --muted2:#5e6678;
     --accent:#3b82f6;
-    --accent2:#22c55e;
+    --accent-2:#60a5fa;
+    --green:#22c55e;
     --danger:#ef4444;
     --warn:#f59e0b;
+    --grad:linear-gradient(135deg,#3b82f6,#8b5cf6);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0;height:100%;width:100%;background:var(--bg);
@@ -29,103 +34,162 @@
   #player video,#player img{width:100%;height:100%;object-fit:contain;background:#000}
   #player.cover video,#player.cover img{object-fit:cover}
 
-  /* Camada de início (autoplay fallback) */
-  #tapStart{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:18px;background:#000;z-index:30;cursor:pointer}
-  #tapStart .logo{font-size:34px;font-weight:800;letter-spacing:.5px}
-  #tapStart .hint{color:var(--muted);font-size:18px}
-  #tapStart .btn{margin-top:8px;padding:16px 40px;border-radius:14px;background:var(--accent);
-    color:#fff;font-size:22px;font-weight:700;border:none}
+  /* ---- Widget de relógio + clima (canto superior direito, compacto) ---- */
+  #infoWidget{position:absolute;top:16px;left:16px;right:auto;z-index:25;text-align:left;
+    background:rgba(10,13,20,.20);backdrop-filter:blur(10px) saturate(135%);
+    -webkit-backdrop-filter:blur(10px) saturate(135%);
+    border:1px solid rgba(255,255,255,.09);border-radius:12px;
+    padding:8px 11px;color:#fff;
+    box-shadow:0 6px 20px rgba(0,0,0,.28);
+    transition:opacity .4s}
+  #infoWidget.hide{opacity:0;pointer-events:none}
+  .iw-time{font-size:22px;font-weight:800;line-height:1;letter-spacing:-.5px;font-variant-numeric:tabular-nums;
+    display:flex;align-items:baseline;gap:3px;justify-content:flex-start}
+  .iw-time .sec{font-size:10px;font-weight:600;color:var(--accent-2);opacity:.85}
+  .iw-date{font-size:9.5px;color:#c6d0e0;margin-top:2px;text-transform:capitalize}
+  .iw-sep{height:1px;background:rgba(255,255,255,.10);margin:7px 0}
+  .iw-weather{display:flex;align-items:center;gap:7px;justify-content:flex-start}
+  .iw-ico{font-size:15px;line-height:1}
+  .iw-temp{font-size:15px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .iw-wcol{display:flex;flex-direction:column;gap:1px;text-align:left}
+  .iw-cond{font-size:9.5px;color:#dde5f0;text-transform:capitalize}
+  .iw-mm{font-size:9px;color:var(--muted)}
+  .iw-foot{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:9px;color:#9fb0c9;justify-content:flex-start}
+  .iw-dot{width:5px;height:5px;border-radius:50%;background:var(--danger);box-shadow:0 0 6px var(--danger)}
+  .iw-dot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+
+  /* ---- Letreiro de avisos (rodapé) ---- */
+  #marquee{position:absolute;left:0;right:0;bottom:0;z-index:26;display:none;align-items:stretch;
+    height:6.2vh;min-height:44px;background:linear-gradient(90deg,rgba(8,11,17,.94),rgba(8,11,17,.80));
+    border-top:1px solid rgba(255,255,255,.09);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  #marquee.show{display:flex}
+  .mq-label{flex:none;display:flex;align-items:center;gap:8px;padding:0 20px;
+    background:var(--grad);color:#fff;font-weight:800;font-size:15px;letter-spacing:.6px;white-space:nowrap}
+  .mq-track{flex:1;overflow:hidden;position:relative;display:flex;align-items:center}
+  .mq-track span{display:inline-block;white-space:nowrap;padding-left:100%;
+    font-size:21px;font-weight:600;color:#f1f5f9;animation:mqscroll linear infinite}
+  @keyframes mqscroll{from{transform:translateX(0)}to{transform:translateX(-100%)}}
 
   /* Estado vazio */
   #empty{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
-    gap:14px;background:#000;z-index:20;text-align:center;padding:30px}
+    gap:16px;background:radial-gradient(1200px 600px at 50% 20%,#10151f,#000);z-index:20;text-align:center;padding:30px}
+  #empty .ico{font-size:64px;opacity:.5}
   #empty .big{font-size:30px;font-weight:800}
   #empty .sub{color:var(--muted);font-size:18px;max-width:680px;line-height:1.5}
 
-  /* Status de conexão / relógio */
-  #hud{position:absolute;top:14px;right:18px;z-index:25;display:flex;gap:12px;align-items:center;
-    font-size:13px;color:#cbd3e1;opacity:0;transition:opacity .3s;pointer-events:none}
-  #app.showHud #hud{opacity:.85}
-  #hud .dot{width:9px;height:9px;border-radius:50%;background:var(--danger)}
-  #hud.online .dot{background:var(--accent2)}
-  #hud .clock{font-variant-numeric:tabular-nums}
+  /* Início */
+  #tapStart{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:18px;background:radial-gradient(1200px 600px at 50% 35%,#10151f,#000);z-index:30;cursor:pointer}
+  #tapStart .logo{font-size:38px;font-weight:800;letter-spacing:.5px;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  #tapStart .hint{color:var(--muted);font-size:18px}
+  #tapStart .btn{margin-top:8px;padding:16px 46px;border-radius:14px;background:var(--grad);
+    color:#fff;font-size:22px;font-weight:700;border:none;box-shadow:0 10px 30px rgba(59,130,246,.4)}
 
   /* ===================== ADMIN ===================== */
-  #admin{position:absolute;inset:0;z-index:40;background:var(--panel);display:none;flex-direction:column}
+  #admin{position:absolute;inset:0;z-index:40;background:
+    radial-gradient(1000px 700px at 85% -10%,rgba(59,130,246,.10),transparent 60%),
+    radial-gradient(900px 600px at 0% 110%,rgba(139,92,246,.10),transparent 55%),
+    var(--panel);display:none;flex-direction:column}
   #admin.open{display:flex}
-  .topbar{display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:1px solid var(--line);background:var(--panel2)}
-  .topbar h1{font-size:20px;margin:0;font-weight:800}
+  .topbar{display:flex;align-items:center;gap:14px;padding:16px 26px;border-bottom:1px solid var(--line);
+    background:rgba(18,22,31,.7);backdrop-filter:blur(10px)}
+  .topbar .brand{display:flex;align-items:center;gap:12px}
+  .topbar .logo-badge{width:40px;height:40px;border-radius:12px;background:var(--grad);display:flex;align-items:center;
+    justify-content:center;font-size:20px;box-shadow:0 6px 18px rgba(59,130,246,.35)}
+  .topbar h1{font-size:19px;margin:0;font-weight:800;letter-spacing:-.3px}
+  .topbar .sub{font-size:12px;color:var(--muted);margin-top:1px}
   .topbar .spacer{flex:1}
-  .badge{font-size:12px;padding:5px 10px;border-radius:999px;background:#1f2937;color:#cbd3e1;display:flex;gap:7px;align-items:center}
-  .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--danger)}
-  .badge.online .dot{background:var(--accent2)}
+  .pill{font-size:12px;padding:7px 13px;border-radius:999px;background:#1a2130;border:1px solid var(--line2);
+    color:#cbd3e1;display:flex;gap:8px;align-items:center;font-weight:600}
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--danger)}
+  .pill.online{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.4);color:#86efac}
+  .pill.online .dot{background:var(--green);box-shadow:0 0 8px var(--green)}
 
-  .admin-body{flex:1;overflow:auto;padding:22px;display:grid;grid-template-columns:1fr;gap:22px;max-width:1100px;width:100%;margin:0 auto}
-  @media(min-width:1000px){.admin-body{grid-template-columns:380px 1fr}}
+  .admin-body{flex:1;overflow:auto;padding:26px;display:grid;grid-template-columns:1fr;gap:24px;max-width:1180px;width:100%;margin:0 auto}
+  @media(min-width:1000px){.admin-body{grid-template-columns:400px 1fr}}
 
-  .card{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:20px}
-  .card h2{margin:0 0 16px;font-size:16px;font-weight:700}
-  .field{margin-bottom:14px}
-  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-  input,select,textarea{width:100%;padding:13px 14px;border-radius:11px;border:1px solid var(--line);
-    background:#0b0d12;color:var(--txt);font-size:15px;outline:none}
-  input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+  .card{background:linear-gradient(180deg,rgba(23,28,39,.9),rgba(18,22,31,.9));
+    border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+  .card h2{margin:0 0 18px;font-size:15px;font-weight:800;display:flex;align-items:center;gap:10px;letter-spacing:-.2px}
+  .card h2 .hico{width:30px;height:30px;border-radius:9px;background:rgba(59,130,246,.15);display:flex;align-items:center;justify-content:center;font-size:15px}
+  .field{margin-bottom:15px}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:7px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  input,select,textarea{width:100%;padding:13px 15px;border-radius:12px;border:1px solid var(--line2);
+    background:#0a0d13;color:var(--txt);font-size:15px;outline:none;transition:border .15s,box-shadow .15s}
+  input::placeholder{color:var(--muted2)}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.18)}
   .row{display:flex;gap:12px}
   .row > *{flex:1}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border-radius:11px;
-    border:none;font-size:15px;font-weight:700;cursor:pointer;background:#222836;color:var(--txt)}
-  .btn:focus{outline:3px solid rgba(59,130,246,.6)}
-  .btn.primary{background:var(--accent);color:#fff}
-  .btn.green{background:var(--accent2);color:#04210f}
-  .btn.danger{background:var(--danger);color:#fff}
-  .btn.ghost{background:transparent;border:1px solid var(--line)}
-  .btn.sm{padding:9px 12px;font-size:13px;border-radius:9px}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border-radius:12px;
+    border:none;font-size:14px;font-weight:700;cursor:pointer;background:#222a3a;color:var(--txt);transition:transform .08s,filter .15s,background .15s}
+  .btn:hover{filter:brightness(1.12)}
+  .btn:active{transform:scale(.97)}
+  .btn:focus-visible{outline:3px solid rgba(59,130,246,.6)}
+  .btn.primary{background:var(--grad);color:#fff;box-shadow:0 6px 18px rgba(59,130,246,.3)}
+  .btn.green{background:linear-gradient(135deg,#16a34a,#22c55e);color:#04210f}
+  .btn.danger{background:rgba(239,68,68,.14);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+  .btn.danger:hover{background:var(--danger);color:#fff}
+  .btn.ghost{background:transparent;border:1px solid var(--line2);color:#c6d0e0}
+  .btn.sm{padding:9px 12px;font-size:13px;border-radius:10px}
+  .btn:disabled{opacity:.45;cursor:not-allowed;filter:none;transform:none}
 
-  .uploadZone{border:2px dashed var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--muted);font-size:14px}
-  .progress{height:8px;background:#0b0d12;border-radius:999px;overflow:hidden;margin-top:10px;display:none}
+  .uploadZone{border:1.5px dashed var(--line2);border-radius:14px;padding:20px;text-align:center;color:var(--muted);
+    font-size:14px;background:rgba(59,130,246,.04);transition:border .15s,background .15s}
+  .uploadZone:hover{border-color:var(--accent);background:rgba(59,130,246,.08)}
+  .progress{height:8px;background:#0a0d13;border-radius:999px;overflow:hidden;margin-top:12px;display:none}
   .progress.show{display:block}
-  .progress > div{height:100%;width:0;background:var(--accent);transition:width .2s}
+  .progress > div{height:100%;width:0;background:var(--grad);transition:width .2s}
+  .divider{display:flex;align-items:center;gap:12px;color:var(--muted2);font-size:12px;margin:14px 0;text-transform:uppercase;letter-spacing:1px}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
 
   .list{display:flex;flex-direction:column;gap:12px}
-  .item{display:flex;gap:14px;align-items:center;background:#0b0d12;border:1px solid var(--line);border-radius:13px;padding:12px}
-  .item.inactive{opacity:.5}
-  .item.playing{border-color:var(--accent2);box-shadow:0 0 0 1px var(--accent2) inset}
-  .thumb{width:96px;height:56px;border-radius:8px;background:#000;object-fit:cover;flex:none;border:1px solid var(--line)}
-  .thumb.ph{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:22px}
+  .item{display:flex;gap:15px;align-items:center;background:rgba(10,13,19,.7);border:1px solid var(--line);
+    border-radius:15px;padding:13px;position:relative;overflow:hidden;transition:border .15s,transform .08s}
+  .item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--muted2)}
+  .item.inactive{opacity:.55}
+  .item.inactive::before{background:var(--muted2)}
+  .item:not(.inactive)::before{background:var(--accent)}
+  .item.playing{border-color:rgba(34,197,94,.5);box-shadow:0 0 0 1px rgba(34,197,94,.4)}
+  .item.playing::before{background:var(--green)}
+  .thumb{width:104px;height:60px;border-radius:10px;background:#000;flex:none;border:1px solid var(--line2);
+    display:flex;align-items:center;justify-content:center;font-size:26px;position:relative}
+  .thumb .liveTag{position:absolute;bottom:4px;left:4px;font-size:9px;font-weight:800;background:var(--green);color:#04210f;padding:1px 5px;border-radius:5px;letter-spacing:.5px}
   .item .meta{flex:1;min-width:0}
-  .item .meta .t{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .item .meta .s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .item .acts{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end;max-width:330px}
-  .tag{font-size:11px;padding:3px 8px;border-radius:999px;background:#1f2937;color:#9fb0c9}
-  .tag.video{background:#172554;color:#93c5fd}
-  .tag.image{background:#14532d;color:#86efac}
+  .item .meta .t{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px}
+  .item .meta .s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+  .item .acts{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end;max-width:300px}
+  .tag{font-size:10px;padding:3px 8px;border-radius:999px;background:#1f2937;color:#9fb0c9;font-weight:700;letter-spacing:.3px}
+  .tag.video{background:rgba(59,130,246,.18);color:#93c5fd}
+  .tag.image{background:rgba(34,197,94,.16);color:#86efac}
 
   .muted{color:var(--muted);font-size:13px}
-  .empty-list{padding:30px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+  .empty-list{padding:40px;text-align:center;color:var(--muted);border:1.5px dashed var(--line2);border-radius:14px}
+  .empty-list .ico{font-size:40px;opacity:.5;margin-bottom:10px}
 
   /* PIN gate */
-  #pin{position:absolute;inset:0;z-index:50;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center}
+  #pin{position:absolute;inset:0;z-index:50;background:rgba(0,0,0,.92);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center}
   #pin.open{display:flex}
-  #pin .box{background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:30px;width:340px;text-align:center}
-  #pin h3{margin:0 0 6px}
-  #pin .dots{display:flex;gap:12px;justify-content:center;margin:20px 0}
-  #pin .dots span{width:16px;height:16px;border-radius:50%;background:#2a3140}
-  #pin .dots span.on{background:var(--accent)}
-  #pin .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  #pin .pad button{padding:16px;font-size:20px;border-radius:12px;border:1px solid var(--line);background:#0b0d12;color:var(--txt);font-weight:700;cursor:pointer}
-  #pin .pad button:focus{outline:3px solid rgba(59,130,246,.6)}
-  #pin .err{color:var(--danger);font-size:13px;height:16px}
+  #pin .box{background:linear-gradient(180deg,#171c27,#10141c);border:1px solid var(--line2);border-radius:22px;padding:32px;width:350px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  #pin .lk{width:54px;height:54px;border-radius:16px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(59,130,246,.4)}
+  #pin h3{margin:0 0 4px;font-size:19px}
+  #pin .dots{display:flex;gap:13px;justify-content:center;margin:22px 0}
+  #pin .dots span{width:15px;height:15px;border-radius:50%;background:#2a3140;transition:background .15s,transform .15s}
+  #pin .dots span.on{background:var(--accent);transform:scale(1.15);box-shadow:0 0 12px rgba(59,130,246,.6)}
+  #pin .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+  #pin .pad button{padding:17px;font-size:20px;border-radius:14px;border:1px solid var(--line2);background:#0c1018;color:var(--txt);font-weight:700;cursor:pointer;transition:background .12s,transform .08s}
+  #pin .pad button:hover{background:#1a2130}
+  #pin .pad button:active{transform:scale(.94)}
+  #pin .pad button:focus-visible{outline:3px solid rgba(59,130,246,.6)}
+  #pin .err{color:var(--danger);font-size:13px;height:16px;font-weight:600}
 
   /* Toast */
-  #toast{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:60;
-    background:#0b0d12;border:1px solid var(--line);padding:12px 20px;border-radius:12px;font-size:14px;
-    opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%}
-  #toast.show{opacity:1}
+  #toast{position:absolute;bottom:26px;left:50%;transform:translateX(-50%) translateY(10px);z-index:60;
+    background:rgba(12,16,24,.95);border:1px solid var(--line2);padding:13px 22px;border-radius:14px;font-size:14px;font-weight:600;
+    opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;max-width:90%;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  .corner-hit{position:absolute;top:0;right:0;width:90px;height:90px;z-index:28}
-  .small-link{position:absolute;bottom:10px;right:14px;z-index:26;font-size:11px;color:#33404f}
+  .corner-hit{position:absolute;top:0;right:0;width:120px;height:120px;z-index:28}
+  .small-link{position:absolute;bottom:10px;right:14px;z-index:26;font-size:11px;color:#2a333f}
 </style>
 </head>
 <body>
@@ -137,14 +201,35 @@
     <img id="img" alt="" style="display:none" />
 
     <div id="empty">
+      <div class="ico">📺</div>
       <div class="big">Nenhuma mídia ativa</div>
       <div class="sub">Abra o painel Admin (botão Menu do controle, ou toque 5× no canto superior direito) e adicione vídeos/imagens para começar a exibição.</div>
     </div>
   </div>
 
-  <div id="hud" class="online"><span class="dot"></span><span id="hudState">conectando…</span><span class="clock" id="clock"></span></div>
+  <!-- Widget relógio + clima -->
+  <div id="infoWidget">
+    <div class="iw-time"><span id="iwTime">--:--</span><span class="sec" id="iwSec"></span></div>
+    <div class="iw-date" id="iwDate">—</div>
+    <div class="iw-sep"></div>
+    <div class="iw-weather">
+      <span class="iw-ico" id="iwIco">⛅</span>
+      <span class="iw-temp" id="iwTemp">--°</span>
+      <div class="iw-wcol">
+        <span class="iw-cond" id="iwCond">carregando…</span>
+        <span class="iw-mm" id="iwMM"></span>
+      </div>
+    </div>
+    <div class="iw-foot"><span class="iw-dot" id="iwDot"></span><span id="iwCity">—</span></div>
+  </div>
 
-  <!-- Início (fallback autoplay com som) -->
+  <!-- Letreiro de avisos -->
+  <div id="marquee">
+    <div class="mq-label">📢 AVISO</div>
+    <div class="mq-track"><span id="mqText"></span></div>
+  </div>
+
+  <!-- Início -->
   <div id="tapStart">
     <div class="logo">▶ Mídia Elevadores</div>
     <div class="hint">Toque para iniciar a exibição</div>
@@ -152,14 +237,20 @@
   </div>
 
   <div class="corner-hit" id="cornerHit"></div>
-  <div class="small-link">v1.0</div>
+  <div class="small-link">v1.1</div>
 
   <!-- ===================== ADMIN ===================== -->
   <div id="admin">
     <div class="topbar">
-      <h1>⚙️ Admin — Mídia Elevadores</h1>
-      <span class="badge" id="connBadge"><span class="dot"></span><span id="connText">offline</span></span>
+      <div class="brand">
+        <div class="logo-badge">🎬</div>
+        <div>
+          <h1>Mídia Elevadores</h1>
+          <div class="sub">Painel de Administração</div>
+        </div>
+      </div>
       <div class="spacer"></div>
+      <span class="pill" id="connBadge"><span class="dot"></span><span id="connText">offline</span></span>
       <button class="btn ghost sm" id="reloadBtn">↻ Recarregar</button>
       <button class="btn primary sm" id="closeAdmin">▶ Voltar ao Player</button>
     </div>
@@ -167,24 +258,24 @@
     <div class="admin-body">
       <!-- Coluna esquerda: adicionar -->
       <div class="card" id="addCard">
-        <h2>Adicionar mídia</h2>
+        <h2><span class="hico">➕</span><span id="addTitle">Adicionar mídia</span></h2>
 
         <div class="field">
-          <label>Enviar arquivo para o CDN (Cloudflare R2)</label>
+          <label>Enviar arquivo para o CDN (R2)</label>
           <div class="uploadZone">
             <input type="file" id="fileInput" accept="video/*,image/*" style="display:none" />
-            <button class="btn sm" id="pickFile" type="button">Escolher arquivo…</button>
-            <div class="muted" id="fileName" style="margin-top:8px">Nenhum arquivo selecionado</div>
+            <button class="btn sm" id="pickFile" type="button">📁 Escolher arquivo…</button>
+            <div class="muted" id="fileName" style="margin-top:9px">Nenhum arquivo selecionado</div>
             <div class="progress" id="upProg"><div></div></div>
           </div>
-          <div class="muted" id="uploadNote" style="margin-top:6px"></div>
+          <div class="muted" id="uploadNote" style="margin-top:7px"></div>
         </div>
 
-        <div style="text-align:center;color:var(--muted);font-size:12px;margin:6px 0">— ou —</div>
+        <div class="divider">ou</div>
 
         <div class="field">
           <label>URL da mídia (link público do R2/CDN)</label>
-          <input id="fUrl" placeholder="https://cdn.seudominio.com/video.mp4" />
+          <input id="fUrl" placeholder="https://pub-xxxx.r2.dev/video.mp4" />
         </div>
         <div class="field">
           <label>Título</label>
@@ -204,19 +295,38 @@
             <input id="fDur" type="number" min="1" value="10" />
           </div>
         </div>
-        <button class="btn green" id="saveBtn" style="width:100%">+ Adicionar à playlist</button>
-        <div class="muted" id="editHint" style="margin-top:10px;display:none"></div>
+        <button class="btn green" id="saveBtn" style="width:100%;padding:15px">+ Adicionar à playlist</button>
+        <div class="muted" id="editHint" style="margin-top:12px;display:none"></div>
       </div>
 
       <!-- Coluna direita: playlist -->
       <div class="card">
-        <h2 style="display:flex;align-items:center;gap:10px">Playlist
-          <span class="muted" id="count">0 itens</span>
+        <h2><span class="hico">📋</span>Playlist
+          <span class="muted" id="count" style="font-weight:600">0 itens</span>
           <span style="flex:1"></span>
-          <button class="btn ghost sm" id="coverToggle" type="button">Ajuste: Contain</button>
+          <button class="btn ghost sm" id="coverToggle" type="button">⬚ Contain</button>
         </h2>
         <div class="list" id="list"></div>
-        <div class="empty-list" id="emptyList" style="display:none">Nenhuma mídia cadastrada ainda.</div>
+        <div class="empty-list" id="emptyList" style="display:none">
+          <div class="ico">🎞️</div>Nenhuma mídia cadastrada ainda.
+        </div>
+      </div>
+
+      <!-- Aviso do condomínio (letreiro) -->
+      <div class="card" style="grid-column:1/-1">
+        <h2><span class="hico">📢</span>Aviso do condomínio (letreiro do rodapé)</h2>
+        <div class="field">
+          <label>Texto do aviso — passa correndo na base da tela</label>
+          <textarea id="mqInput" rows="2" placeholder="Ex.: Prezados condôminos, a manutenção dos elevadores será no sábado às 8h. Atenciosamente, a Administração."></textarea>
+        </div>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:9px;margin:0;text-transform:none;font-size:14px;color:var(--txt);cursor:pointer">
+            <input type="checkbox" id="mqActive" style="width:18px;height:18px;flex:none" checked> Exibir aviso na tela
+          </label>
+          <span style="flex:1"></span>
+          <button class="btn ghost sm" id="mqClear" type="button">Limpar</button>
+          <button class="btn primary" id="mqSave">💾 Salvar aviso</button>
+        </div>
       </div>
     </div>
   </div>
@@ -224,15 +334,16 @@
   <!-- PIN -->
   <div id="pin">
     <div class="box">
+      <div class="lk">🔒</div>
       <h3>Acesso Admin</h3>
-      <div class="muted">Digite o PIN</div>
+      <div class="muted">Digite o PIN de 4 dígitos</div>
       <div class="dots" id="pinDots"><span></span><span></span><span></span><span></span></div>
       <div class="err" id="pinErr"></div>
       <div class="pad" id="pinPad">
         <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
         <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
         <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
-        <button data-k="x">←</button><button data-k="0">0</button><button data-k="c">Sair</button>
+        <button data-k="x">←</button><button data-k="0">0</button><button data-k="c">✕</button>
       </div>
     </div>
   </div>
@@ -255,8 +366,12 @@ const CONFIG = {
   ADMIN_PIN: "2468",
 
   // Endpoint do Cloudflare Worker que faz upload para o R2 (rota /upload).
-  // O Worker aceita POST multipart (campo "file") e devolve { url: "https://..." }.
   R2_UPLOAD_ENDPOINT: "https://midiaelevadores.midiaelevadores.workers.dev/upload",
+
+  // Previsão do tempo: tenta localizar a cidade atual por IP automaticamente.
+  // Se a detecção falhar (ou WEATHER_FORCE_DEFAULT=true), usa a cidade abaixo.
+  WEATHER_DEFAULT: { lat: -7.2306, lon: -35.8811, city: "Campina Grande" },
+  WEATHER_FORCE_DEFAULT: false,  // true = sempre Campina Grande (ignora o IP)
 };
 
 /* =====================================================================
@@ -266,13 +381,13 @@ const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON, {
   realtime: { params: { eventsPerSecond: 5 } }
 });
 
-let playlist = [];      // itens ativos ordenados (para o player)
-let allItems = [];      // todos os itens (para o admin)
+let playlist = [];      // itens ativos ordenados (player)
+let allItems = [];      // todos os itens (admin)
 let idx = 0;            // índice atual no player
-let started = false;    // usuário/autoplay iniciou
+let started = false;    // player iniciado
 let imgTimer = null;    // timer de imagem
-let editingId = null;   // id em edição no admin
-let coverMode = false;  // object-fit cover/contain
+let editingId = null;   // id em edição
+let coverMode = true;   // object-fit cover/contain (true = preenche a tela)
 
 const $ = (s)=>document.querySelector(s);
 const vid = $("#vid"), imgEl = $("#img");
@@ -282,7 +397,7 @@ const vid = $("#vid"), imgEl = $("#img");
    ===================================================================== */
 function toast(msg){
   const t = $("#toast"); t.textContent = msg; t.classList.add("show");
-  clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove("show"), 2600);
+  clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove("show"), 2800);
 }
 function detectType(url, hint){
   if(hint && hint!=="auto") return hint;
@@ -293,11 +408,66 @@ function detectType(url, hint){
 }
 function setConn(online){
   $("#connBadge").classList.toggle("online", online);
-  $("#connText").textContent = online ? "tempo real ativo" : "offline";
-  $("#hud").classList.toggle("online", online);
-  $("#hudState").textContent = online ? "online" : "offline";
+  $("#connText").textContent = online ? "Tempo real ativo" : "offline";
+  $("#iwDot").classList.toggle("on", online);
 }
 function escapeHtml(s){return (s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* =====================================================================
+   RELÓGIO + CLIMA
+   ===================================================================== */
+function tickClock(){
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  const ss = String(d.getSeconds()).padStart(2,"0");
+  $("#iwTime").textContent = hh+":"+mm;
+  $("#iwSec").textContent = ss;
+  $("#iwDate").textContent = d.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
+}
+function weatherInfo(code){
+  const map = {
+    0:["☀️","Céu limpo"],1:["🌤️","Predomínio de sol"],2:["⛅","Parcialmente nublado"],3:["☁️","Nublado"],
+    45:["🌫️","Névoa"],48:["🌫️","Névoa gelada"],
+    51:["🌦️","Garoa fraca"],53:["🌦️","Garoa"],55:["🌦️","Garoa forte"],
+    56:["🌧️","Garoa congelante"],57:["🌧️","Garoa congelante"],
+    61:["🌧️","Chuva fraca"],63:["🌧️","Chuva"],65:["🌧️","Chuva forte"],
+    66:["🌧️","Chuva congelante"],67:["🌧️","Chuva congelante"],
+    71:["🌨️","Neve fraca"],73:["🌨️","Neve"],75:["🌨️","Neve forte"],77:["🌨️","Flocos de neve"],
+    80:["🌦️","Pancadas fracas"],81:["🌦️","Pancadas de chuva"],82:["⛈️","Pancadas fortes"],
+    85:["🌨️","Pancadas de neve"],86:["🌨️","Pancadas de neve"],
+    95:["⛈️","Tempestade"],96:["⛈️","Tempestade c/ granizo"],99:["⛈️","Tempestade c/ granizo"]
+  };
+  return map[code] || ["🌡️","—"];
+}
+let WX = { lat:null, lon:null, city:"" };
+async function initWeather(){
+  if(!CONFIG.WEATHER_FORCE_DEFAULT){
+    try{
+      const r = await fetch("https://ipapi.co/json/");
+      if(r.ok){ const j = await r.json(); if(j.latitude){ WX.lat=j.latitude; WX.lon=j.longitude; WX.city=j.city||""; } }
+    }catch(_){}
+  }
+  if(WX.lat==null){ WX = { ...CONFIG.WEATHER_DEFAULT }; }
+  $("#iwCity").textContent = WX.city || "—";
+  fetchWeather();
+  setInterval(fetchWeather, 15*60*1000); // a cada 15 min
+}
+async function fetchWeather(){
+  try{
+    const u = "https://api.open-meteo.com/v1/forecast?latitude="+WX.lat+"&longitude="+WX.lon+
+      "&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto";
+    const r = await fetch(u); if(!r.ok) return; const j = await r.json();
+    const t = Math.round(j.current.temperature_2m);
+    const [ico,txt] = weatherInfo(j.current.weather_code);
+    const max = Math.round(j.daily.temperature_2m_max[0]);
+    const min = Math.round(j.daily.temperature_2m_min[0]);
+    $("#iwIco").textContent = ico;
+    $("#iwTemp").textContent = t+"°";
+    $("#iwCond").textContent = txt;
+    $("#iwMM").textContent = "Máx "+max+"°  ·  Mín "+min+"°";
+  }catch(_){}
+}
 
 /* =====================================================================
    PLAYER
@@ -310,14 +480,12 @@ function rebuildPlaylist(){
     if(!cur){ idx = 0; playCurrent(); }
   }
 }
-
 function playCurrent(){
   clearTimeout(imgTimer);
   if(!playlist.length){ stopMedia(); return; }
   if(idx >= playlist.length) idx = 0;
   const item = playlist[idx];
   const type = detectType(item.url, item.type);
-
   if(type === "image"){
     vid.pause(); vid.style.display="none"; vid.removeAttribute("src");
     imgEl.src = item.url; imgEl.style.display="block";
@@ -327,23 +495,18 @@ function playCurrent(){
     imgEl.style.display="none"; imgEl.removeAttribute("src");
     vid.style.display="block";
     if(vid.src !== item.url){ vid.src = item.url; }
-    vid.play().catch(()=>{ /* aguarda gesto */ });
+    vid.play().catch(()=>{});
   }
-  renderList(); // re-marca o item tocando
+  renderList();
 }
-
 function next(){ idx = (idx+1) % Math.max(playlist.length,1); playCurrent(); }
 function stopMedia(){ vid.pause(); vid.removeAttribute("src"); imgEl.removeAttribute("src"); clearTimeout(imgTimer); }
-
 vid.addEventListener("ended", next);
 vid.addEventListener("error", ()=>{ console.warn("Erro no vídeo, pulando…"); setTimeout(next, 800); });
-
 function startPlayback(withSound){
-  started = true;
-  $("#tapStart").style.display="none";
+  started = true; $("#tapStart").style.display="none";
   if(withSound){ vid.muted = false; }
-  rebuildPlaylist();
-  idx = 0; playCurrent();
+  rebuildPlaylist(); idx = 0; playCurrent();
 }
 
 /* =====================================================================
@@ -353,33 +516,25 @@ async function loadAll(){
   const { data, error } = await sb.from(CONFIG.TABLE).select("*").order("position",{ascending:true});
   if(error){ console.error(error); toast("Erro ao carregar: "+error.message); return; }
   allItems = data||[];
-  rebuildPlaylist();
-  renderList();
+  rebuildPlaylist(); renderList();
   if(started && playlist.length && vid.paused && imgEl.style.display==="none") playCurrent();
 }
-
 function subscribeRealtime(){
   sb.channel("videos-rt")
-    .on("postgres_changes", { event:"*", schema:"public", table:CONFIG.TABLE }, (payload)=>{
-      applyChange(payload);
-    })
+    .on("postgres_changes", { event:"*", schema:"public", table:CONFIG.TABLE }, applyChange)
     .subscribe((status)=>{
       setConn(status === "SUBSCRIBED");
       if(status === "SUBSCRIBED") toast("Sincronização em tempo real ativa");
     });
 }
-
 function applyChange(p){
   const { eventType, new:n, old:o } = p;
   if(eventType === "INSERT"){ allItems.push(n); }
   else if(eventType === "UPDATE"){ allItems = allItems.map(i=>i.id===n.id? n : i); }
   else if(eventType === "DELETE"){ allItems = allItems.filter(i=>i.id!==o.id); }
-  rebuildPlaylist();
-  renderList();
+  rebuildPlaylist(); renderList();
   if(started && playlist.length && vid.paused && imgEl.style.display==="none") playCurrent();
-  toast("Playlist atualizada");
 }
-
 async function addOrUpdate(){
   const url = $("#fUrl").value.trim();
   const title = $("#fTitle").value.trim() || "Sem título";
@@ -388,7 +543,6 @@ async function addOrUpdate(){
   if(!url){ toast("Informe a URL ou envie um arquivo"); return; }
   const realType = detectType(url, type);
   const payload = { title, url, type:realType, duration: realType==="image"?duration:null, active:true };
-
   if(editingId){
     const { error } = await sb.from(CONFIG.TABLE).update(payload).eq("id", editingId);
     if(error){ toast("Erro: "+error.message); return; }
@@ -398,12 +552,10 @@ async function addOrUpdate(){
     payload.position = maxPos + 1;
     const { error } = await sb.from(CONFIG.TABLE).insert(payload);
     if(error){ toast("Erro: "+error.message); return; }
-    toast("Mídia adicionada");
+    toast("Mídia adicionada ✓");
   }
-  clearForm();
-  loadAll();
+  clearForm(); loadAll();
 }
-
 async function del(id){
   if(!confirm("Remover esta mídia da playlist?")) return;
   const { error } = await sb.from(CONFIG.TABLE).delete().eq("id", id);
@@ -416,8 +568,7 @@ async function toggleActive(item){
 }
 async function move(item, dir){
   const sorted = [...allItems].sort((a,b)=>a.position-b.position);
-  const i = sorted.findIndex(x=>x.id===item.id);
-  const j = i+dir;
+  const i = sorted.findIndex(x=>x.id===item.id), j = i+dir;
   if(j<0||j>=sorted.length) return;
   const a = sorted[i], b = sorted[j];
   await sb.from(CONFIG.TABLE).update({position:b.position}).eq("id",a.id);
@@ -425,20 +576,18 @@ async function move(item, dir){
 }
 
 /* =====================================================================
-   UPLOAD R2 (via Cloudflare Worker, opcional)
+   UPLOAD R2 (via Worker)
    ===================================================================== */
 function setupUpload(){
   const note = $("#uploadNote");
   if(!CONFIG.R2_UPLOAD_ENDPOINT){
-    note.textContent = "Upload direto desativado. Configure R2_UPLOAD_ENDPOINT ou cole a URL manualmente.";
-    $("#pickFile").disabled = true;
-    return;
+    note.textContent = "Upload direto desativado. Cole a URL manualmente abaixo.";
+    $("#pickFile").disabled = true; return;
   }
-  note.textContent = "Os arquivos vão para o seu bucket R2 e a URL é preenchida automaticamente.";
+  note.textContent = "Os arquivos vão para o seu R2 e a URL é preenchida automaticamente.";
   $("#pickFile").onclick = ()=> $("#fileInput").click();
   $("#fileInput").onchange = async (e)=>{
-    const file = e.target.files[0];
-    if(!file) return;
+    const file = e.target.files[0]; if(!file) return;
     $("#fileName").textContent = file.name;
     if(!$("#fTitle").value) $("#fTitle").value = file.name.replace(/\.[^.]+$/,"");
     await uploadToR2(file);
@@ -451,39 +600,88 @@ function uploadToR2(file){
     const fd = new FormData(); fd.append("file", file, file.name);
     const xhr = new XMLHttpRequest();
     xhr.open("POST", CONFIG.R2_UPLOAD_ENDPOINT);
-    xhr.upload.onprogress = (ev)=>{ if(ev.lengthComputable) bar.style.width = (ev.loaded/ev.total*100).toFixed(0)+"%"; };
+    xhr.upload.onprogress = (ev)=>{ if(ev.lengthComputable) bar.style.width=(ev.loaded/ev.total*100).toFixed(0)+"%"; };
     xhr.onload = ()=>{
       prog.classList.remove("show");
+      if(xhr.status<200 || xhr.status>=300){
+        toast(xhr.status===404 ? "Upload indisponível (Worker não publicado). Use o campo URL." : "Falha no upload ("+xhr.status+")");
+        resolve(); return;
+      }
       try{
         const r = JSON.parse(xhr.responseText);
-        if(r.url){ $("#fUrl").value = r.url; toast("Upload concluído"); }
+        if(r.url){ $("#fUrl").value = r.url; toast("Upload concluído ✓"); }
         else toast("Upload: resposta sem URL");
       }catch(_){ toast("Upload: resposta inválida"); }
       resolve();
     };
-    xhr.onerror = ()=>{ prog.classList.remove("show"); toast("Falha no upload"); resolve(); };
+    xhr.onerror = ()=>{ prog.classList.remove("show"); toast("Falha de rede no upload"); resolve(); };
     xhr.send(fd);
   });
+}
+
+/* =====================================================================
+   LETREIRO / AVISOS (tabela settings)
+   ===================================================================== */
+let settings = { marquee:"", marquee_active:true };
+async function loadSettings(){
+  try{
+    const { data, error } = await sb.from("settings").select("*").eq("id",1).maybeSingle();
+    if(error){ console.warn("settings:", error.message); }
+    else if(data){ settings = data; }
+  }catch(_){}
+  if($("#mqInput")){ $("#mqInput").value = settings.marquee||""; $("#mqActive").checked = settings.marquee_active!==false; }
+  renderMarquee();
+}
+function renderMarquee(){
+  const bar = $("#marquee"); if(!bar) return;
+  const txt = (settings.marquee||"").trim();
+  if(!txt || settings.marquee_active===false){ bar.classList.remove("show"); return; }
+  const span = $("#mqText"); span.textContent = txt;
+  bar.classList.add("show");
+  requestAnimationFrame(()=>{
+    const w = span.scrollWidth || 800;
+    span.style.animationDuration = Math.max(10, w/110) + "s"; // ~110 px/s
+  });
+}
+async function saveMarquee(){
+  const text = $("#mqInput").value.trim();
+  const active = $("#mqActive").checked;
+  const { error } = await sb.from("settings").upsert({ id:1, marquee:text, marquee_active:active, updated_at:new Date().toISOString() });
+  if(error){ toast("Erro ao salvar: "+error.message); return; }
+  settings.marquee = text; settings.marquee_active = active;
+  renderMarquee(); toast("Aviso salvo ✓");
+}
+function subscribeSettings(){
+  sb.channel("settings-rt")
+    .on("postgres_changes",{event:"*",schema:"public",table:"settings"},(p)=>{
+      if(p.new){
+        settings = p.new; renderMarquee();
+        if($("#admin").classList.contains("open")){
+          $("#mqInput").value = settings.marquee||"";
+          $("#mqActive").checked = settings.marquee_active!==false;
+        }
+      }
+    })
+    .subscribe();
 }
 
 /* =====================================================================
    RENDER ADMIN
    ===================================================================== */
 function renderList(){
-  const list = $("#list");
-  if(!list) return;
+  const list = $("#list"); if(!list) return;
   const sorted = [...allItems].sort((a,b)=>a.position-b.position);
   $("#count").textContent = sorted.length + (sorted.length===1?" item":" itens");
   $("#emptyList").style.display = sorted.length ? "none" : "block";
   list.innerHTML = "";
   const playingId = playlist[idx] && playlist[idx].id;
-
   sorted.forEach((item, i)=>{
     const type = detectType(item.url, item.type);
+    const isPlaying = item.id===playingId && item.active;
     const el = document.createElement("div");
-    el.className = "item" + (item.active?"":" inactive") + (item.id===playingId?" playing":"");
+    el.className = "item" + (item.active?"":" inactive") + (isPlaying?" playing":"");
     el.innerHTML =
-      '<div class="thumb ph">'+(type==="image"?"🖼️":"🎬")+'</div>'+
+      '<div class="thumb">'+(type==="image"?"🖼️":"🎬")+(isPlaying?'<span class="liveTag">● NO AR</span>':'')+'</div>'+
       '<div class="meta">'+
         '<div class="t">'+escapeHtml(item.title||"Sem título")+
           ' <span class="tag '+type+'">'+(type==="image"?"IMG "+(item.duration||10)+"s":"VÍDEO")+'</span></div>'+
@@ -492,9 +690,9 @@ function renderList(){
       '<div class="acts">'+
         '<button class="btn sm ghost" data-act="up" '+(i===0?"disabled":"")+'>▲</button>'+
         '<button class="btn sm ghost" data-act="down" '+(i===sorted.length-1?"disabled":"")+'>▼</button>'+
-        '<button class="btn sm '+(item.active?"":"green")+'" data-act="toggle">'+(item.active?"Pausar":"Ativar")+'</button>'+
-        '<button class="btn sm" data-act="edit">Editar</button>'+
-        '<button class="btn sm danger" data-act="del">Excluir</button>'+
+        '<button class="btn sm '+(item.active?"ghost":"green")+'" data-act="toggle">'+(item.active?"⏸ Pausar":"▶ Ativar")+'</button>'+
+        '<button class="btn sm ghost" data-act="edit">✎</button>'+
+        '<button class="btn sm danger" data-act="del">🗑</button>'+
       '</div>';
     el.querySelector('[data-act="up"]').onclick   = ()=>move(item,-1);
     el.querySelector('[data-act="down"]').onclick = ()=>move(item, 1);
@@ -504,18 +702,17 @@ function renderList(){
     list.appendChild(el);
   });
 }
-
 function startEdit(item){
   editingId = item.id;
   $("#fUrl").value = item.url; $("#fTitle").value = item.title||"";
   $("#fType").value = item.type||"auto"; $("#fDur").value = item.duration||10;
   $("#saveBtn").textContent = "✔ Salvar alterações";
-  $("#addCard").querySelector("h2").textContent = "Editar mídia";
-  const h=$("#editHint"); h.style.display="block"; h.innerHTML='Editando… <a href="#" id="cancelEdit" style="color:#93c5fd">cancelar</a>';
+  $("#addTitle").textContent = "Editar mídia";
+  const h=$("#editHint"); h.style.display="block"; h.innerHTML='✎ Editando… <a href="#" id="cancelEdit" style="color:#93c5fd">cancelar</a>';
   $("#cancelEdit").onclick=(e)=>{e.preventDefault();cancelEdit();};
 }
 function cancelEdit(){ editingId=null; clearForm(); $("#editHint").style.display="none";
-  $("#saveBtn").textContent="+ Adicionar à playlist"; $("#addCard").querySelector("h2").textContent="Adicionar mídia"; }
+  $("#saveBtn").textContent="+ Adicionar à playlist"; $("#addTitle").textContent="Adicionar mídia"; }
 function clearForm(){ $("#fUrl").value=""; $("#fTitle").value=""; $("#fType").value="auto"; $("#fDur").value=10;
   $("#fileName").textContent="Nenhum arquivo selecionado"; }
 
@@ -536,14 +733,13 @@ function pinPress(k){
     else { $("#pinErr").textContent="PIN incorreto"; pinBuf=""; setTimeout(renderPinDots,300); }
   }
 }
-function openAdmin(){ $("#admin").classList.add("open"); loadAll(); }
-function closeAdmin(){ $("#admin").classList.remove("open"); if(started && playlist.length && vid.paused && imgEl.style.display==="none") playCurrent(); }
+function openAdmin(){ $("#admin").classList.add("open"); $("#infoWidget").classList.add("hide"); loadAll(); }
+function closeAdmin(){ $("#admin").classList.remove("open"); $("#infoWidget").classList.remove("hide");
+  if(started && playlist.length && vid.paused && imgEl.style.display==="none") playCurrent(); }
 
-/* Atalho por cantos (5 toques no canto sup. direito) */
 let cornerCount=0, cornerTimer=null;
 $("#cornerHit").addEventListener("click", ()=>{
-  cornerCount++; clearTimeout(cornerTimer);
-  cornerTimer=setTimeout(()=>cornerCount=0,1500);
+  cornerCount++; clearTimeout(cornerTimer); cornerTimer=setTimeout(()=>cornerCount=0,1500);
   if(cornerCount>=5){ cornerCount=0; openPin(); }
 });
 
@@ -564,13 +760,8 @@ document.addEventListener("keydown",(e)=>{
 });
 
 /* =====================================================================
-   RELÓGIO + HUD + WAKE LOCK
+   WAKE LOCK
    ===================================================================== */
-setInterval(()=>{ const d=new Date(); $("#clock").textContent =
-  d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); }, 1000);
-$("#player").addEventListener("click", ()=>{ $("#app").classList.add("showHud");
-  clearTimeout(window._hud); window._hud=setTimeout(()=>$("#app").classList.remove("showHud"),4000); });
-
 async function keepAwake(){
   try{
     if("wakeLock" in navigator){
@@ -591,17 +782,23 @@ $("#saveBtn").addEventListener("click", addOrUpdate);
 $("#closeAdmin").addEventListener("click", closeAdmin);
 $("#reloadBtn").addEventListener("click", loadAll);
 $("#coverToggle").addEventListener("click", ()=>{ coverMode=!coverMode;
-  $("#player").classList.toggle("cover",coverMode); $("#coverToggle").textContent="Ajuste: "+(coverMode?"Cover":"Contain"); });
+  $("#player").classList.toggle("cover",coverMode); $("#coverToggle").textContent=(coverMode?"⛶ Cover":"⬚ Contain"); });
 document.querySelectorAll("#pinPad button").forEach(b=> b.onclick=()=>pinPress(b.dataset.k));
+$("#mqSave").addEventListener("click", saveMarquee);
+$("#mqClear").addEventListener("click", ()=>{ $("#mqInput").value=""; $("#mqInput").focus(); });
 
 async function init(){
   setConn(false);
+  $("#player").classList.toggle("cover", coverMode);
+  $("#coverToggle").textContent = coverMode ? "⛶ Cover" : "⬚ Contain";
+  tickClock(); setInterval(tickClock, 1000);
+  initWeather();
   keepAwake();
   setupUpload();
   await loadAll();
+  await loadSettings();
   subscribeRealtime();
-
-  // Tenta autoplay mudo automático (ideal p/ Fire TV)
+  subscribeSettings();
   if(playlist.length){
     started = true; $("#tapStart").style.display="none";
     idx=0; playCurrent();
