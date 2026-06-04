@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -254,10 +254,9 @@ const CONFIG = {
   // PIN para abrir o Admin (MUDE!)
   ADMIN_PIN: "2468",
 
-  // (Opcional) Endpoint do Cloudflare Worker que faz upload para o R2.
-  // Deixe "" para desativar o upload e usar apenas URL manual.
-  // O Worker deve aceitar POST multipart (campo "file") e devolver { url: "https://..." }.
-  R2_UPLOAD_ENDPOINT: "",
+  // Endpoint do Cloudflare Worker que faz upload para o R2 (rota /upload).
+  // O Worker aceita POST multipart (campo "file") e devolve { url: "https://..." }.
+  R2_UPLOAD_ENDPOINT: "https://midiaelevadores.midiaelevadores.workers.dev/upload",
 };
 
 /* =====================================================================
