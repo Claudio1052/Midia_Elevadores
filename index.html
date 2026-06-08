@@ -30,11 +30,12 @@
   #app{position:fixed;inset:0}
 
   /* ===================== PLAYER ===================== */
+  /* object-fit:cover — preenche a tela (ideal para vídeos verticais) */
   #player{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center}
-  #player video,#player img{width:100%;height:100%;object-fit:contain;background:#000}
-  #player.cover video,#player.cover img{object-fit:cover}
+  #player video,#player img{width:100%;height:100%;object-fit:cover;background:#000}
+  #player.contain video,#player.contain img{object-fit:contain}
 
-  /* ---- Widget de relógio + clima (canto superior direito, compacto) ---- */
+  /* ---- Widget de relógio + clima ---- */
   #infoWidget{position:absolute;top:16px;left:16px;right:auto;z-index:25;text-align:left;
     background:rgba(10,13,20,.20);backdrop-filter:blur(10px) saturate(135%);
     -webkit-backdrop-filter:blur(10px) saturate(135%);
@@ -161,6 +162,7 @@
   .tag{font-size:10px;padding:3px 8px;border-radius:999px;background:#1f2937;color:#9fb0c9;font-weight:700;letter-spacing:.3px}
   .tag.video{background:rgba(59,130,246,.18);color:#93c5fd}
   .tag.image{background:rgba(34,197,94,.16);color:#86efac}
+  .tag.cached{background:rgba(34,197,94,.12);color:#6ee7b7}
 
   .muted{color:var(--muted);font-size:13px}
   .empty-list{padding:40px;text-align:center;color:var(--muted);border:1.5px dashed var(--line2);border-radius:14px}
@@ -237,7 +239,7 @@
   </div>
 
   <div class="corner-hit" id="cornerHit"></div>
-  <div class="small-link">v1.1</div>
+  <div class="small-link">v2.0</div>
 
   <!-- ===================== ADMIN ===================== -->
   <div id="admin">
@@ -304,7 +306,7 @@
         <h2><span class="hico">📋</span>Playlist
           <span class="muted" id="count" style="font-weight:600">0 itens</span>
           <span style="flex:1"></span>
-          <button class="btn ghost sm" id="coverToggle" type="button">⬚ Contain</button>
+          <button class="btn ghost sm" id="coverToggle" type="button">⛶ Cover</button>
         </h2>
         <div class="list" id="list"></div>
         <div class="empty-list" id="emptyList" style="display:none">
@@ -351,7 +353,12 @@
   <div id="toast"></div>
 </div>
 
-<!-- Supabase JS v2 -->
+<!--
+  Supabase JS v2
+  Para Capacitor (offline-first): baixe supabase.min.js e coloque na pasta www/
+    curl -L -o www/supabase.min.js https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js
+  Para desenvolvimento web: o CDN funciona normalmente.
+-->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 /* =====================================================================
@@ -369,252 +376,438 @@ const CONFIG = {
   R2_UPLOAD_ENDPOINT: "https://midiaelevadores.midiaelevadores.workers.dev/upload",
 
   // Previsão do tempo: tenta localizar a cidade atual por IP automaticamente.
-  // Se a detecção falhar (ou WEATHER_FORCE_DEFAULT=true), usa a cidade abaixo.
   WEATHER_DEFAULT: { lat: -7.2306, lon: -35.8811, city: "Campina Grande" },
-  WEATHER_FORCE_DEFAULT: false,  // true = sempre Campina Grande (ignora o IP)
+  WEATHER_FORCE_DEFAULT: false,
 };
 
 /* =====================================================================
    ESTADO
    ===================================================================== */
-const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON, {
-  realtime: { params: { eventsPerSecond: 5 } }
-});
+// sb pode ser null se o SDK não carregar (modo offline sem bundle local)
+const sb = window.supabase
+  ? supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON, {
+      realtime: { params: { eventsPerSecond: 5 } }
+    })
+  : null;
 
-let playlist = [];      // itens ativos ordenados (player)
-let allItems = [];      // todos os itens (admin)
-let idx = 0;            // índice atual no player
-let started = false;    // player iniciado
-let imgTimer = null;    // timer de imagem
-let editingId = null;   // id em edição
-let coverMode = true;   // object-fit cover/contain (true = preenche a tela)
+let playlist     = [];     // itens ativos ordenados (player)
+let allItems     = [];     // todos os itens (admin)
+let idx          = 0;      // índice atual no player
+let started      = false;  // player iniciado
+let imgTimer     = null;   // timer de imagem
+let editingId    = null;   // id em edição
+let coverMode    = true;   // true = cover (preenche tela — padrão para vertical)
+let isOnline     = navigator.onLine;
+let rtChannel    = null;   // canal realtime de vídeos
+let settingsRtCh = null;   // canal realtime de settings
 
-const $ = (s)=>document.querySelector(s);
-const vid = $("#vid"), imgEl = $("#img");
+const $ = (s) => document.querySelector(s);
+const vid   = $("#vid");
+const imgEl = $("#img");
 
 /* =====================================================================
    UTILIDADES
    ===================================================================== */
-function toast(msg){
-  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
-  clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove("show"), 2800);
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove("show"), 3000);
 }
-function detectType(url, hint){
-  if(hint && hint!=="auto") return hint;
-  const u = (url||"").split("?")[0].toLowerCase();
-  if(/\.(mp4|webm|ogg|ogv|mov|m4v|mkv)$/.test(u)) return "video";
-  if(/\.(jpg|jpeg|png|gif|webp|avif|bmp)$/.test(u)) return "image";
+function detectType(url, hint) {
+  if (hint && hint !== "auto") return hint;
+  const u = (url || "").split("?")[0].toLowerCase();
+  if (/\.(mp4|webm|ogg|ogv|mov|m4v|mkv)$/.test(u)) return "video";
+  if (/\.(jpg|jpeg|png|gif|webp|avif|bmp)$/.test(u)) return "image";
   return "video";
 }
-function setConn(online){
+function setConn(online) {
   $("#connBadge").classList.toggle("online", online);
   $("#connText").textContent = online ? "Tempo real ativo" : "offline";
   $("#iwDot").classList.toggle("on", online);
 }
-function escapeHtml(s){return (s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escapeHtml(s) {
+  return (s || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* =====================================================================
+   CACHE LOCAL — playlist no localStorage, vídeos no IndexedDB
+   ===================================================================== */
+const CACHE_NS = "midia_v2";
+
+function savePlaylistCache(items) {
+  try { localStorage.setItem(CACHE_NS + "_pl", JSON.stringify(items)); } catch (_) {}
+}
+function loadPlaylistCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_NS + "_pl") || "[]"); } catch (_) { return []; }
+}
+function saveSettingsCache(s) {
+  try { localStorage.setItem(CACHE_NS + "_cfg", JSON.stringify(s)); } catch (_) {}
+}
+function loadSettingsCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_NS + "_cfg") || "null"); } catch (_) { return null; }
+}
+
+// IndexedDB para blobs de vídeo (offline playback)
+let _idb = null;
+async function openIDB() {
+  if (_idb) return _idb;
+  return new Promise((res, rej) => {
+    const r = indexedDB.open("MidiaElevDB", 1);
+    r.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains("vids"))
+        db.createObjectStore("vids", { keyPath: "k" });
+    };
+    r.onsuccess  = (e) => { _idb = e.target.result; res(_idb); };
+    r.onerror    = ()  => rej(r.error);
+  });
+}
+async function idbGet(url) {
+  try {
+    const db = await openIDB();
+    return new Promise((res) => {
+      const tx  = db.transaction("vids", "readonly");
+      const req = tx.objectStore("vids").get(url);
+      req.onsuccess = () => res(req.result || null);
+      req.onerror   = () => res(null);
+    });
+  } catch (_) { return null; }
+}
+async function idbPut(url, blob) {
+  try {
+    const db = await openIDB();
+    return new Promise((res) => {
+      const tx = db.transaction("vids", "readwrite");
+      tx.objectStore("vids").put({ k: url, blob, ts: Date.now() });
+      tx.oncomplete = res;
+      tx.onerror    = res;
+    });
+  } catch (_) {}
+}
+
+// Cache de ObjectURLs em memória (evita criar duplicatas)
+const _objUrls = new Map();
+
+// Retorna URL local (blob/objectURL) se disponível, senão a URL original
+async function localVideoUrl(url) {
+  if (!url || detectType(url, "auto") !== "video") return url;
+  if (_objUrls.has(url)) return _objUrls.get(url);
+  const row = await idbGet(url);
+  if (row && row.blob) {
+    const local = URL.createObjectURL(row.blob);
+    _objUrls.set(url, local);
+    return local;
+  }
+  return url;
+}
+
+// Baixa um vídeo e salva no IndexedDB para uso offline
+async function cacheVideo(url) {
+  if (!url || !isOnline || detectType(url, "auto") !== "video") return;
+  if (_objUrls.has(url)) return;
+  if (await idbGet(url)) return; // já está no IndexedDB
+  try {
+    const resp = await fetch(url, { mode: "cors" });
+    if (!resp.ok) return;
+    const blob = await resp.blob();
+    await idbPut(url, blob);
+    _objUrls.set(url, URL.createObjectURL(blob));
+  } catch (e) {
+    console.warn("cacheVideo falhou:", url, e);
+  }
+}
+
+// Baixa em background todos os vídeos ainda não cacheados
+async function cacheAllVideos() {
+  for (const item of allItems) {
+    if (!isOnline) break;
+    if (detectType(item.url, item.type) === "video") await cacheVideo(item.url);
+  }
+}
+
+/* =====================================================================
+   REDE — detecta conexão e reage
+   ===================================================================== */
+window.addEventListener("online", async () => {
+  isOnline = true;
+  toast("Conexão restaurada — sincronizando…");
+  await loadAll();
+  await loadSettings();
+  cacheAllVideos(); // background
+  subscribeRealtime();
+  subscribeSettings();
+});
+window.addEventListener("offline", () => {
+  isOnline = false;
+  setConn(false);
+  toast("Sem conexão — reproduzindo do cache");
+});
 
 /* =====================================================================
    RELÓGIO + CLIMA
    ===================================================================== */
-function tickClock(){
-  const d = new Date();
-  const hh = String(d.getHours()).padStart(2,"0");
-  const mm = String(d.getMinutes()).padStart(2,"0");
-  const ss = String(d.getSeconds()).padStart(2,"0");
-  $("#iwTime").textContent = hh+":"+mm;
-  $("#iwSec").textContent = ss;
-  $("#iwDate").textContent = d.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
+function tickClock() {
+  const d  = new Date();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  $("#iwTime").textContent = hh + ":" + mm;
+  $("#iwSec").textContent  = ss;
+  $("#iwDate").textContent = d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
 }
-function weatherInfo(code){
+function weatherInfo(code) {
   const map = {
     0:["☀️","Céu limpo"],1:["🌤️","Predomínio de sol"],2:["⛅","Parcialmente nublado"],3:["☁️","Nublado"],
     45:["🌫️","Névoa"],48:["🌫️","Névoa gelada"],
     51:["🌦️","Garoa fraca"],53:["🌦️","Garoa"],55:["🌦️","Garoa forte"],
-    56:["🌧️","Garoa congelante"],57:["🌧️","Garoa congelante"],
     61:["🌧️","Chuva fraca"],63:["🌧️","Chuva"],65:["🌧️","Chuva forte"],
-    66:["🌧️","Chuva congelante"],67:["🌧️","Chuva congelante"],
-    71:["🌨️","Neve fraca"],73:["🌨️","Neve"],75:["🌨️","Neve forte"],77:["🌨️","Flocos de neve"],
     80:["🌦️","Pancadas fracas"],81:["🌦️","Pancadas de chuva"],82:["⛈️","Pancadas fortes"],
-    85:["🌨️","Pancadas de neve"],86:["🌨️","Pancadas de neve"],
-    95:["⛈️","Tempestade"],96:["⛈️","Tempestade c/ granizo"],99:["⛈️","Tempestade c/ granizo"]
+    95:["⛈️","Tempestade"],96:["⛈️","Tempestade c/ granizo"],99:["⛈️","Tempestade c/ granizo"],
   };
-  return map[code] || ["🌡️","—"];
+  return map[code] || ["🌡️", "—"];
 }
-let WX = { lat:null, lon:null, city:"" };
-async function initWeather(){
-  if(!CONFIG.WEATHER_FORCE_DEFAULT){
-    try{
+let WX = { lat: null, lon: null, city: "" };
+async function initWeather() {
+  if (!CONFIG.WEATHER_FORCE_DEFAULT) {
+    try {
       const r = await fetch("https://ipapi.co/json/");
-      if(r.ok){ const j = await r.json(); if(j.latitude){ WX.lat=j.latitude; WX.lon=j.longitude; WX.city=j.city||""; } }
-    }catch(_){}
+      if (r.ok) {
+        const j = await r.json();
+        if (j.latitude) { WX.lat = j.latitude; WX.lon = j.longitude; WX.city = j.city || ""; }
+      }
+    } catch (_) {}
   }
-  if(WX.lat==null){ WX = { ...CONFIG.WEATHER_DEFAULT }; }
+  if (WX.lat == null) WX = { ...CONFIG.WEATHER_DEFAULT };
   $("#iwCity").textContent = WX.city || "—";
   fetchWeather();
-  setInterval(fetchWeather, 15*60*1000); // a cada 15 min
+  setInterval(fetchWeather, 15 * 60 * 1000);
 }
-async function fetchWeather(){
-  try{
-    const u = "https://api.open-meteo.com/v1/forecast?latitude="+WX.lat+"&longitude="+WX.lon+
+async function fetchWeather() {
+  try {
+    const u = "https://api.open-meteo.com/v1/forecast?latitude=" + WX.lat + "&longitude=" + WX.lon +
       "&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto";
-    const r = await fetch(u); if(!r.ok) return; const j = await r.json();
-    const t = Math.round(j.current.temperature_2m);
-    const [ico,txt] = weatherInfo(j.current.weather_code);
+    const r = await fetch(u);
+    if (!r.ok) return;
+    const j = await r.json();
+    const [ico, txt] = weatherInfo(j.current.weather_code);
     const max = Math.round(j.daily.temperature_2m_max[0]);
     const min = Math.round(j.daily.temperature_2m_min[0]);
-    $("#iwIco").textContent = ico;
-    $("#iwTemp").textContent = t+"°";
+    $("#iwIco").textContent  = ico;
+    $("#iwTemp").textContent = Math.round(j.current.temperature_2m) + "°";
     $("#iwCond").textContent = txt;
-    $("#iwMM").textContent = "Máx "+max+"°  ·  Mín "+min+"°";
-  }catch(_){}
+    $("#iwMM").textContent   = "Máx " + max + "°  ·  Mín " + min + "°";
+  } catch (_) {}
 }
 
 /* =====================================================================
-   PLAYER
+   PLAYER — reprodução vertical, async com fallback para cache local
    ===================================================================== */
-function rebuildPlaylist(){
-  playlist = allItems.filter(i=>i.active).sort((a,b)=>(a.position-b.position)||(a.created_at<b.created_at?-1:1));
+function rebuildPlaylist() {
+  playlist = allItems
+    .filter(i => i.active)
+    .sort((a, b) => (a.position - b.position) || (a.created_at < b.created_at ? -1 : 1));
   $("#empty").style.display = playlist.length ? "none" : "flex";
-  if(playlist.length && started){
+  if (playlist.length && started) {
     const cur = playlist[idx];
-    if(!cur){ idx = 0; playCurrent(); }
+    if (!cur) { idx = 0; playCurrent(); }
   }
 }
-function playCurrent(){
+
+async function playCurrent() {
   clearTimeout(imgTimer);
-  if(!playlist.length){ stopMedia(); return; }
-  if(idx >= playlist.length) idx = 0;
+  if (!playlist.length) { stopMedia(); return; }
+  if (idx >= playlist.length) idx = 0;
   const item = playlist[idx];
   const type = detectType(item.url, item.type);
-  if(type === "image"){
-    vid.pause(); vid.style.display="none"; vid.removeAttribute("src");
-    imgEl.src = item.url; imgEl.style.display="block";
-    const secs = Math.max(2, parseInt(item.duration||10,10));
-    imgTimer = setTimeout(next, secs*1000);
+
+  if (type === "image") {
+    vid.pause(); vid.style.display = "none"; vid.removeAttribute("src");
+    imgEl.src = item.url; imgEl.style.display = "block";
+    imgTimer = setTimeout(next, Math.max(2, parseInt(item.duration || 10, 10)) * 1000);
   } else {
-    imgEl.style.display="none"; imgEl.removeAttribute("src");
-    vid.style.display="block";
-    if(vid.src !== item.url){ vid.src = item.url; }
-    vid.play().catch(()=>{});
+    imgEl.style.display = "none"; imgEl.removeAttribute("src");
+    vid.style.display = "block";
+    // Prefere URL local (blob do IndexedDB), volta para CDN se não tiver cache
+    const src = await localVideoUrl(item.url);
+    if (vid.src !== src) vid.src = src;
+    vid.play().catch(async () => {
+      // Se a URL local falhou (ObjectURL inválido), tenta a URL original do CDN
+      if (src !== item.url) {
+        vid.src = item.url;
+        vid.play().catch(() => setTimeout(next, 800));
+      } else {
+        setTimeout(next, 800);
+      }
+    });
   }
   renderList();
 }
-function next(){ idx = (idx+1) % Math.max(playlist.length,1); playCurrent(); }
-function stopMedia(){ vid.pause(); vid.removeAttribute("src"); imgEl.removeAttribute("src"); clearTimeout(imgTimer); }
+
+async function next() {
+  idx = (idx + 1) % Math.max(playlist.length, 1);
+  await playCurrent();
+}
+
+function stopMedia() {
+  vid.pause();
+  vid.removeAttribute("src");
+  imgEl.removeAttribute("src");
+  clearTimeout(imgTimer);
+}
+
 vid.addEventListener("ended", next);
-vid.addEventListener("error", ()=>{ console.warn("Erro no vídeo, pulando…"); setTimeout(next, 800); });
-function startPlayback(withSound){
-  started = true; $("#tapStart").style.display="none";
-  if(withSound){ vid.muted = false; }
-  rebuildPlaylist(); idx = 0; playCurrent();
+vid.addEventListener("error", () => { console.warn("Erro no vídeo, pulando…"); setTimeout(next, 800); });
+
+async function startPlayback(withSound) {
+  started = true;
+  $("#tapStart").style.display = "none";
+  if (withSound) vid.muted = false;
+  rebuildPlaylist();
+  idx = 0;
+  await playCurrent();
 }
 
 /* =====================================================================
-   DADOS (Supabase)
+   DADOS (Supabase) — offline-first
    ===================================================================== */
-async function loadAll(){
-  const { data, error } = await sb.from(CONFIG.TABLE).select("*").order("position",{ascending:true});
-  if(error){ console.error(error); toast("Erro ao carregar: "+error.message); return; }
-  allItems = data||[];
+async function loadAll() {
+  if (!sb || !isOnline) {
+    // Sem Supabase ou sem internet: usa o cache local
+    allItems = loadPlaylistCache();
+    rebuildPlaylist(); renderList();
+    return;
+  }
+  const { data, error } = await sb.from(CONFIG.TABLE).select("*").order("position", { ascending: true });
+  if (error) {
+    console.error(error);
+    allItems = loadPlaylistCache(); // fallback para cache
+    rebuildPlaylist(); renderList();
+    return;
+  }
+  allItems = data || [];
+  savePlaylistCache(allItems); // atualiza cache local
   rebuildPlaylist(); renderList();
-  if(started && playlist.length && vid.paused && imgEl.style.display==="none") playCurrent();
+  if (started && playlist.length && vid.paused && imgEl.style.display === "none") playCurrent();
 }
-function subscribeRealtime(){
-  sb.channel("videos-rt")
-    .on("postgres_changes", { event:"*", schema:"public", table:CONFIG.TABLE }, applyChange)
-    .subscribe((status)=>{
-      setConn(status === "SUBSCRIBED");
-      if(status === "SUBSCRIBED") toast("Sincronização em tempo real ativa");
+
+// Realtime somente para INSERT — detecta vídeo novo e baixa para offline
+function subscribeRealtime() {
+  if (!sb || rtChannel) return;
+  rtChannel = sb.channel("videos-rt")
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: CONFIG.TABLE },
+      async (p) => {
+        const n = p.new;
+        if (allItems.find(i => i.id === n.id)) return; // duplicata
+        allItems.push(n);
+        savePlaylistCache(allItems);
+        rebuildPlaylist(); renderList();
+        if (started && playlist.length && vid.paused && imgEl.style.display === "none") playCurrent();
+        // Baixa o novo vídeo para uso offline em background
+        if (detectType(n.url, n.type) === "video" && isOnline) {
+          toast("Novo vídeo detectado — baixando para offline…");
+          await cacheVideo(n.url);
+          toast('"' + (n.title || "Novo vídeo") + '" disponível offline ✓');
+        }
+      })
+    .subscribe((status) => {
+      const ok = status === "SUBSCRIBED";
+      setConn(ok);
+      if (ok) toast("Tempo real ativo");
     });
 }
-function applyChange(p){
-  const { eventType, new:n, old:o } = p;
-  if(eventType === "INSERT"){ allItems.push(n); }
-  else if(eventType === "UPDATE"){ allItems = allItems.map(i=>i.id===n.id? n : i); }
-  else if(eventType === "DELETE"){ allItems = allItems.filter(i=>i.id!==o.id); }
-  rebuildPlaylist(); renderList();
-  if(started && playlist.length && vid.paused && imgEl.style.display==="none") playCurrent();
-}
-async function addOrUpdate(){
-  const url = $("#fUrl").value.trim();
-  const title = $("#fTitle").value.trim() || "Sem título";
-  const type = $("#fType").value;
-  const duration = parseInt($("#fDur").value||"10",10);
-  if(!url){ toast("Informe a URL ou envie um arquivo"); return; }
+
+async function addOrUpdate() {
+  if (!sb) { toast("Sem conexão com Supabase"); return; }
+  const url      = $("#fUrl").value.trim();
+  const title    = $("#fTitle").value.trim() || "Sem título";
+  const type     = $("#fType").value;
+  const duration = parseInt($("#fDur").value || "10", 10);
+  if (!url) { toast("Informe a URL ou envie um arquivo"); return; }
   const realType = detectType(url, type);
-  const payload = { title, url, type:realType, duration: realType==="image"?duration:null, active:true };
-  if(editingId){
+  const payload  = { title, url, type: realType, duration: realType === "image" ? duration : null, active: true };
+  if (editingId) {
     const { error } = await sb.from(CONFIG.TABLE).update(payload).eq("id", editingId);
-    if(error){ toast("Erro: "+error.message); return; }
+    if (error) { toast("Erro: " + error.message); return; }
     toast("Mídia atualizada"); cancelEdit();
   } else {
-    const maxPos = allItems.reduce((m,i)=>Math.max(m,i.position||0),0);
+    const maxPos = allItems.reduce((m, i) => Math.max(m, i.position || 0), 0);
     payload.position = maxPos + 1;
     const { error } = await sb.from(CONFIG.TABLE).insert(payload);
-    if(error){ toast("Erro: "+error.message); return; }
+    if (error) { toast("Erro: " + error.message); return; }
     toast("Mídia adicionada ✓");
   }
   clearForm(); loadAll();
 }
-async function del(id){
-  if(!confirm("Remover esta mídia da playlist?")) return;
+async function del(id) {
+  if (!sb) return;
+  if (!confirm("Remover esta mídia da playlist?")) return;
   const { error } = await sb.from(CONFIG.TABLE).delete().eq("id", id);
-  if(error){ toast("Erro: "+error.message); return; }
-  toast("Removida");
+  if (error) { toast("Erro: " + error.message); return; }
+  toast("Removida"); loadAll();
 }
-async function toggleActive(item){
-  const { error } = await sb.from(CONFIG.TABLE).update({active:!item.active}).eq("id", item.id);
-  if(error) toast("Erro: "+error.message);
+async function toggleActive(item) {
+  if (!sb) return;
+  const { error } = await sb.from(CONFIG.TABLE).update({ active: !item.active }).eq("id", item.id);
+  if (error) toast("Erro: " + error.message);
+  else loadAll();
 }
-async function move(item, dir){
-  const sorted = [...allItems].sort((a,b)=>a.position-b.position);
-  const i = sorted.findIndex(x=>x.id===item.id), j = i+dir;
-  if(j<0||j>=sorted.length) return;
+async function move(item, dir) {
+  if (!sb) return;
+  const sorted = [...allItems].sort((a, b) => a.position - b.position);
+  const i = sorted.findIndex(x => x.id === item.id), j = i + dir;
+  if (j < 0 || j >= sorted.length) return;
   const a = sorted[i], b = sorted[j];
-  await sb.from(CONFIG.TABLE).update({position:b.position}).eq("id",a.id);
-  await sb.from(CONFIG.TABLE).update({position:a.position}).eq("id",b.id);
+  await sb.from(CONFIG.TABLE).update({ position: b.position }).eq("id", a.id);
+  await sb.from(CONFIG.TABLE).update({ position: a.position }).eq("id", b.id);
+  loadAll();
 }
 
 /* =====================================================================
    UPLOAD R2 (via Worker)
    ===================================================================== */
-function setupUpload(){
+function setupUpload() {
   const note = $("#uploadNote");
-  if(!CONFIG.R2_UPLOAD_ENDPOINT){
+  if (!CONFIG.R2_UPLOAD_ENDPOINT) {
     note.textContent = "Upload direto desativado. Cole a URL manualmente abaixo.";
     $("#pickFile").disabled = true; return;
   }
   note.textContent = "Os arquivos vão para o seu R2 e a URL é preenchida automaticamente.";
-  $("#pickFile").onclick = ()=> $("#fileInput").click();
-  $("#fileInput").onchange = async (e)=>{
-    const file = e.target.files[0]; if(!file) return;
+  $("#pickFile").onclick = () => $("#fileInput").click();
+  $("#fileInput").onchange = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
     $("#fileName").textContent = file.name;
-    if(!$("#fTitle").value) $("#fTitle").value = file.name.replace(/\.[^.]+$/,"");
+    if (!$("#fTitle").value) $("#fTitle").value = file.name.replace(/\.[^.]+$/, "");
     await uploadToR2(file);
   };
 }
-function uploadToR2(file){
-  return new Promise((resolve)=>{
+function uploadToR2(file) {
+  return new Promise((resolve) => {
     const prog = $("#upProg"), bar = prog.firstElementChild;
-    prog.classList.add("show"); bar.style.width="0%";
+    prog.classList.add("show"); bar.style.width = "0%";
     const fd = new FormData(); fd.append("file", file, file.name);
     const xhr = new XMLHttpRequest();
     xhr.open("POST", CONFIG.R2_UPLOAD_ENDPOINT);
-    xhr.upload.onprogress = (ev)=>{ if(ev.lengthComputable) bar.style.width=(ev.loaded/ev.total*100).toFixed(0)+"%"; };
-    xhr.onload = ()=>{
+    xhr.upload.onprogress = (ev) => {
+      if (ev.lengthComputable) bar.style.width = (ev.loaded / ev.total * 100).toFixed(0) + "%";
+    };
+    xhr.onload = () => {
       prog.classList.remove("show");
-      if(xhr.status<200 || xhr.status>=300){
-        toast(xhr.status===404 ? "Upload indisponível (Worker não publicado). Use o campo URL." : "Falha no upload ("+xhr.status+")");
+      if (xhr.status < 200 || xhr.status >= 300) {
+        toast(xhr.status === 404
+          ? "Upload indisponível (Worker não publicado). Use o campo URL."
+          : "Falha no upload (" + xhr.status + ")");
         resolve(); return;
       }
-      try{
+      try {
         const r = JSON.parse(xhr.responseText);
-        if(r.url){ $("#fUrl").value = r.url; toast("Upload concluído ✓"); }
+        if (r.url) { $("#fUrl").value = r.url; toast("Upload concluído ✓"); }
         else toast("Upload: resposta sem URL");
-      }catch(_){ toast("Upload: resposta inválida"); }
+      } catch (_) { toast("Upload: resposta inválida"); }
       resolve();
     };
-    xhr.onerror = ()=>{ prog.classList.remove("show"); toast("Falha de rede no upload"); resolve(); };
+    xhr.onerror = () => { prog.classList.remove("show"); toast("Falha de rede no upload"); resolve(); };
     xhr.send(fd);
   });
 }
@@ -622,43 +815,61 @@ function uploadToR2(file){
 /* =====================================================================
    LETREIRO / AVISOS (tabela settings)
    ===================================================================== */
-let settings = { marquee:"", marquee_active:true };
-async function loadSettings(){
-  try{
-    const { data, error } = await sb.from("settings").select("*").eq("id",1).maybeSingle();
-    if(error){ console.warn("settings:", error.message); }
-    else if(data){ settings = data; }
-  }catch(_){}
-  if($("#mqInput")){ $("#mqInput").value = settings.marquee||""; $("#mqActive").checked = settings.marquee_active!==false; }
+let settings = { marquee: "", marquee_active: true };
+
+async function loadSettings() {
+  if (!sb || !isOnline) {
+    const cached = loadSettingsCache();
+    if (cached) settings = cached;
+    if ($("#mqInput")) {
+      $("#mqInput").value   = settings.marquee || "";
+      $("#mqActive").checked = settings.marquee_active !== false;
+    }
+    renderMarquee(); return;
+  }
+  try {
+    const { data, error } = await sb.from("settings").select("*").eq("id", 1).maybeSingle();
+    if (error) console.warn("settings:", error.message);
+    else if (data) { settings = data; saveSettingsCache(settings); }
+  } catch (_) {}
+  if ($("#mqInput")) {
+    $("#mqInput").value   = settings.marquee || "";
+    $("#mqActive").checked = settings.marquee_active !== false;
+  }
   renderMarquee();
 }
-function renderMarquee(){
-  const bar = $("#marquee"); if(!bar) return;
-  const txt = (settings.marquee||"").trim();
-  if(!txt || settings.marquee_active===false){ bar.classList.remove("show"); return; }
-  const span = $("#mqText"); span.textContent = txt;
+function renderMarquee() {
+  const bar = $("#marquee"); if (!bar) return;
+  const txt = (settings.marquee || "").trim();
+  if (!txt || settings.marquee_active === false) { bar.classList.remove("show"); return; }
+  const span = $("#mqText");
+  span.textContent = txt;
   bar.classList.add("show");
-  requestAnimationFrame(()=>{
-    const w = span.scrollWidth || 800;
-    span.style.animationDuration = Math.max(10, w/110) + "s"; // ~110 px/s
+  requestAnimationFrame(() => {
+    span.style.animationDuration = Math.max(10, (span.scrollWidth || 800) / 110) + "s";
   });
 }
-async function saveMarquee(){
-  const text = $("#mqInput").value.trim();
+async function saveMarquee() {
+  if (!sb) { toast("Sem conexão"); return; }
+  const text   = $("#mqInput").value.trim();
   const active = $("#mqActive").checked;
-  const { error } = await sb.from("settings").upsert({ id:1, marquee:text, marquee_active:active, updated_at:new Date().toISOString() });
-  if(error){ toast("Erro ao salvar: "+error.message); return; }
+  const { error } = await sb.from("settings").upsert({ id: 1, marquee: text, marquee_active: active, updated_at: new Date().toISOString() });
+  if (error) { toast("Erro ao salvar: " + error.message); return; }
   settings.marquee = text; settings.marquee_active = active;
+  saveSettingsCache(settings);
   renderMarquee(); toast("Aviso salvo ✓");
 }
-function subscribeSettings(){
-  sb.channel("settings-rt")
-    .on("postgres_changes",{event:"*",schema:"public",table:"settings"},(p)=>{
-      if(p.new){
-        settings = p.new; renderMarquee();
-        if($("#admin").classList.contains("open")){
-          $("#mqInput").value = settings.marquee||"";
-          $("#mqActive").checked = settings.marquee_active!==false;
+function subscribeSettings() {
+  if (!sb || settingsRtCh) return;
+  settingsRtCh = sb.channel("settings-rt")
+    .on("postgres_changes", { event: "*", schema: "public", table: "settings" }, (p) => {
+      if (p.new) {
+        settings = p.new;
+        saveSettingsCache(settings);
+        renderMarquee();
+        if ($("#admin").classList.contains("open")) {
+          $("#mqInput").value   = settings.marquee || "";
+          $("#mqActive").checked = settings.marquee_active !== false;
         }
       }
     })
@@ -668,145 +879,214 @@ function subscribeSettings(){
 /* =====================================================================
    RENDER ADMIN
    ===================================================================== */
-function renderList(){
-  const list = $("#list"); if(!list) return;
-  const sorted = [...allItems].sort((a,b)=>a.position-b.position);
-  $("#count").textContent = sorted.length + (sorted.length===1?" item":" itens");
+function renderList() {
+  const list = $("#list"); if (!list) return;
+  const sorted = [...allItems].sort((a, b) => a.position - b.position);
+  $("#count").textContent = sorted.length + (sorted.length === 1 ? " item" : " itens");
   $("#emptyList").style.display = sorted.length ? "none" : "block";
   list.innerHTML = "";
   const playingId = playlist[idx] && playlist[idx].id;
-  sorted.forEach((item, i)=>{
-    const type = detectType(item.url, item.type);
-    const isPlaying = item.id===playingId && item.active;
+  sorted.forEach((item, i) => {
+    const type      = detectType(item.url, item.type);
+    const isPlaying = item.id === playingId && item.active;
+    const isCached  = _objUrls.has(item.url);
     const el = document.createElement("div");
-    el.className = "item" + (item.active?"":" inactive") + (isPlaying?" playing":"");
+    el.className = "item" + (item.active ? "" : " inactive") + (isPlaying ? " playing" : "");
     el.innerHTML =
-      '<div class="thumb">'+(type==="image"?"🖼️":"🎬")+(isPlaying?'<span class="liveTag">● NO AR</span>':'')+'</div>'+
-      '<div class="meta">'+
-        '<div class="t">'+escapeHtml(item.title||"Sem título")+
-          ' <span class="tag '+type+'">'+(type==="image"?"IMG "+(item.duration||10)+"s":"VÍDEO")+'</span></div>'+
-        '<div class="s">'+escapeHtml(item.url)+'</div>'+
-      '</div>'+
-      '<div class="acts">'+
-        '<button class="btn sm ghost" data-act="up" '+(i===0?"disabled":"")+'>▲</button>'+
-        '<button class="btn sm ghost" data-act="down" '+(i===sorted.length-1?"disabled":"")+'>▼</button>'+
-        '<button class="btn sm '+(item.active?"ghost":"green")+'" data-act="toggle">'+(item.active?"⏸ Pausar":"▶ Ativar")+'</button>'+
-        '<button class="btn sm ghost" data-act="edit">✎</button>'+
-        '<button class="btn sm danger" data-act="del">🗑</button>'+
-      '</div>';
-    el.querySelector('[data-act="up"]').onclick   = ()=>move(item,-1);
-    el.querySelector('[data-act="down"]').onclick = ()=>move(item, 1);
-    el.querySelector('[data-act="toggle"]').onclick= ()=>toggleActive(item);
-    el.querySelector('[data-act="edit"]').onclick = ()=>startEdit(item);
-    el.querySelector('[data-act="del"]').onclick  = ()=>del(item.id);
+      '<div class="thumb">' + (type === "image" ? "🖼️" : "🎬") +
+        (isPlaying ? '<span class="liveTag">● NO AR</span>' : "") + "</div>" +
+      '<div class="meta">' +
+        '<div class="t">' + escapeHtml(item.title || "Sem título") +
+          ' <span class="tag ' + type + '">' + (type === "image" ? "IMG " + (item.duration || 10) + "s" : "VÍDEO") + "</span>" +
+          (isCached ? ' <span class="tag cached">💾 offline</span>' : "") +
+        "</div>" +
+        '<div class="s">' + escapeHtml(item.url) + "</div>" +
+      "</div>" +
+      '<div class="acts">' +
+        '<button class="btn sm ghost" data-act="up" ' + (i === 0 ? "disabled" : "") + ">▲</button>" +
+        '<button class="btn sm ghost" data-act="down" ' + (i === sorted.length - 1 ? "disabled" : "") + ">▼</button>" +
+        '<button class="btn sm ' + (item.active ? "ghost" : "green") + '" data-act="toggle">' + (item.active ? "⏸ Pausar" : "▶ Ativar") + "</button>" +
+        '<button class="btn sm ghost" data-act="edit">✎</button>' +
+        '<button class="btn sm danger" data-act="del">🗑</button>' +
+      "</div>";
+    el.querySelector('[data-act="up"]').onclick    = () => move(item, -1);
+    el.querySelector('[data-act="down"]').onclick  = () => move(item, 1);
+    el.querySelector('[data-act="toggle"]').onclick = () => toggleActive(item);
+    el.querySelector('[data-act="edit"]').onclick  = () => startEdit(item);
+    el.querySelector('[data-act="del"]').onclick   = () => del(item.id);
     list.appendChild(el);
   });
 }
-function startEdit(item){
+function startEdit(item) {
   editingId = item.id;
-  $("#fUrl").value = item.url; $("#fTitle").value = item.title||"";
-  $("#fType").value = item.type||"auto"; $("#fDur").value = item.duration||10;
-  $("#saveBtn").textContent = "✔ Salvar alterações";
-  $("#addTitle").textContent = "Editar mídia";
-  const h=$("#editHint"); h.style.display="block"; h.innerHTML='✎ Editando… <a href="#" id="cancelEdit" style="color:#93c5fd">cancelar</a>';
-  $("#cancelEdit").onclick=(e)=>{e.preventDefault();cancelEdit();};
+  $("#fUrl").value   = item.url;
+  $("#fTitle").value = item.title || "";
+  $("#fType").value  = item.type || "auto";
+  $("#fDur").value   = item.duration || 10;
+  $("#saveBtn").textContent   = "✔ Salvar alterações";
+  $("#addTitle").textContent  = "Editar mídia";
+  const h = $("#editHint");
+  h.style.display = "block";
+  h.innerHTML = '✎ Editando… <a href="#" id="cancelEdit" style="color:#93c5fd">cancelar</a>';
+  $("#cancelEdit").onclick = (e) => { e.preventDefault(); cancelEdit(); };
 }
-function cancelEdit(){ editingId=null; clearForm(); $("#editHint").style.display="none";
-  $("#saveBtn").textContent="+ Adicionar à playlist"; $("#addTitle").textContent="Adicionar mídia"; }
-function clearForm(){ $("#fUrl").value=""; $("#fTitle").value=""; $("#fType").value="auto"; $("#fDur").value=10;
-  $("#fileName").textContent="Nenhum arquivo selecionado"; }
+function cancelEdit() {
+  editingId = null; clearForm(); $("#editHint").style.display = "none";
+  $("#saveBtn").textContent = "+ Adicionar à playlist";
+  $("#addTitle").textContent = "Adicionar mídia";
+}
+function clearForm() {
+  $("#fUrl").value = ""; $("#fTitle").value = ""; $("#fType").value = "auto"; $("#fDur").value = 10;
+  $("#fileName").textContent = "Nenhum arquivo selecionado";
+}
 
 /* =====================================================================
    ABERTURA DO ADMIN + PIN
    ===================================================================== */
 let pinBuf = "";
-function openPin(){ $("#pin").classList.add("open"); pinBuf=""; renderPinDots(); $("#pinErr").textContent=""; }
-function closePin(){ $("#pin").classList.remove("open"); }
-function renderPinDots(){ document.querySelectorAll("#pinDots span").forEach((s,i)=>s.classList.toggle("on", i<pinBuf.length)); }
-function pinPress(k){
-  if(k==="c"){ closePin(); return; }
-  if(k==="x"){ pinBuf=pinBuf.slice(0,-1); renderPinDots(); return; }
-  if(pinBuf.length>=4) return;
+function openPin()  { $("#pin").classList.add("open"); pinBuf = ""; renderPinDots(); $("#pinErr").textContent = ""; }
+function closePin() { $("#pin").classList.remove("open"); }
+function renderPinDots() {
+  document.querySelectorAll("#pinDots span").forEach((s, i) => s.classList.toggle("on", i < pinBuf.length));
+}
+function pinPress(k) {
+  if (k === "c") { closePin(); return; }
+  if (k === "x") { pinBuf = pinBuf.slice(0, -1); renderPinDots(); return; }
+  if (pinBuf.length >= 4) return;
   pinBuf += k; renderPinDots();
-  if(pinBuf.length===4){
-    if(pinBuf===CONFIG.ADMIN_PIN){ closePin(); openAdmin(); }
-    else { $("#pinErr").textContent="PIN incorreto"; pinBuf=""; setTimeout(renderPinDots,300); }
+  if (pinBuf.length === 4) {
+    if (pinBuf === CONFIG.ADMIN_PIN) { closePin(); openAdmin(); }
+    else { $("#pinErr").textContent = "PIN incorreto"; pinBuf = ""; setTimeout(renderPinDots, 300); }
   }
 }
-function openAdmin(){ $("#admin").classList.add("open"); $("#infoWidget").classList.add("hide"); loadAll(); }
-function closeAdmin(){ $("#admin").classList.remove("open"); $("#infoWidget").classList.remove("hide");
-  if(started && playlist.length && vid.paused && imgEl.style.display==="none") playCurrent(); }
+function openAdmin()  {
+  $("#admin").classList.add("open");
+  $("#infoWidget").classList.add("hide");
+  loadAll();
+}
+function closeAdmin() {
+  $("#admin").classList.remove("open");
+  $("#infoWidget").classList.remove("hide");
+  if (started && playlist.length && vid.paused && imgEl.style.display === "none") playCurrent();
+}
 
-let cornerCount=0, cornerTimer=null;
-$("#cornerHit").addEventListener("click", ()=>{
-  cornerCount++; clearTimeout(cornerTimer); cornerTimer=setTimeout(()=>cornerCount=0,1500);
-  if(cornerCount>=5){ cornerCount=0; openPin(); }
+let cornerCount = 0, cornerTimer = null;
+$("#cornerHit").addEventListener("click", () => {
+  cornerCount++;
+  clearTimeout(cornerTimer);
+  cornerTimer = setTimeout(() => cornerCount = 0, 1500);
+  if (cornerCount >= 5) { cornerCount = 0; openPin(); }
 });
 
 /* =====================================================================
    TECLADO / CONTROLE FIRE TV
    ===================================================================== */
-document.addEventListener("keydown",(e)=>{
-  if(e.keyCode===82 || (e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==="a")){ e.preventDefault(); if(!$("#admin").classList.contains("open")) openPin(); return; }
-  if(e.key==="Escape" || e.keyCode===27){
-    if($("#pin").classList.contains("open")){ closePin(); }
-    else if($("#admin").classList.contains("open")){ closeAdmin(); }
+document.addEventListener("keydown", (e) => {
+  if (e.keyCode === 82 || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "a")) {
+    e.preventDefault();
+    if (!$("#admin").classList.contains("open")) openPin();
     return;
   }
-  if(!$("#admin").classList.contains("open") && started){
-    if(e.key==="ArrowRight"){ next(); }
-    if(e.key==="MediaPlayPause"||e.key===" "){ vid.paused?vid.play():vid.pause(); }
+  if (e.key === "Escape" || e.keyCode === 27) {
+    if ($("#pin").classList.contains("open")) closePin();
+    else if ($("#admin").classList.contains("open")) closeAdmin();
+    return;
+  }
+  if (!$("#admin").classList.contains("open") && started) {
+    if (e.key === "ArrowRight") next();
+    if (e.key === "MediaPlayPause" || e.key === " ") vid.paused ? vid.play() : vid.pause();
   }
 });
 
 /* =====================================================================
    WAKE LOCK
    ===================================================================== */
-async function keepAwake(){
-  try{
-    if("wakeLock" in navigator){
+async function keepAwake() {
+  try {
+    if ("wakeLock" in navigator) {
       await navigator.wakeLock.request("screen");
-      document.addEventListener("visibilitychange", async ()=>{
-        if(document.visibilityState==="visible"){ try{await navigator.wakeLock.request("screen");}catch(_){} }
+      document.addEventListener("visibilitychange", async () => {
+        if (document.visibilityState === "visible") {
+          try { await navigator.wakeLock.request("screen"); } catch (_) {}
+        }
       });
     }
-  }catch(_){}
+  } catch (_) {}
 }
 
 /* =====================================================================
-   INÍCIO
+   EVENT LISTENERS
    ===================================================================== */
-$("#startBtn").addEventListener("click", ()=>startPlayback(true));
-$("#tapStart").addEventListener("click", (e)=>{ if(e.target.id==="tapStart") startPlayback(true); });
+$("#startBtn").addEventListener("click", () => startPlayback(true));
+$("#tapStart").addEventListener("click", (e) => { if (e.target.id === "tapStart") startPlayback(true); });
 $("#saveBtn").addEventListener("click", addOrUpdate);
 $("#closeAdmin").addEventListener("click", closeAdmin);
 $("#reloadBtn").addEventListener("click", loadAll);
-$("#coverToggle").addEventListener("click", ()=>{ coverMode=!coverMode;
-  $("#player").classList.toggle("cover",coverMode); $("#coverToggle").textContent=(coverMode?"⛶ Cover":"⬚ Contain"); });
-document.querySelectorAll("#pinPad button").forEach(b=> b.onclick=()=>pinPress(b.dataset.k));
-$("#mqSave").addEventListener("click", saveMarquee);
-$("#mqClear").addEventListener("click", ()=>{ $("#mqInput").value=""; $("#mqInput").focus(); });
-
-async function init(){
-  setConn(false);
-  $("#player").classList.toggle("cover", coverMode);
+$("#coverToggle").addEventListener("click", () => {
+  coverMode = !coverMode;
+  // cover = padrão (vertical preenche a tela); contain = adiciona barras
+  $("#player").classList.toggle("contain", !coverMode);
   $("#coverToggle").textContent = coverMode ? "⛶ Cover" : "⬚ Contain";
+});
+document.querySelectorAll("#pinPad button").forEach(b => b.onclick = () => pinPress(b.dataset.k));
+$("#mqSave").addEventListener("click", saveMarquee);
+$("#mqClear").addEventListener("click", () => { $("#mqInput").value = ""; $("#mqInput").focus(); });
+
+/* =====================================================================
+   INICIALIZAÇÃO — offline-first
+   1. Carrega cache local imediatamente (sem esperar rede)
+   2. Inicia reprodução do cache
+   3. Se online: sincroniza Supabase, baixa vídeos novos, ativa realtime
+   ===================================================================== */
+async function init() {
+  setConn(false);
+  // Cover por padrão (preenche tela — ideal para vídeos verticais)
+  $("#player").classList.remove("contain");
+  $("#coverToggle").textContent = "⛶ Cover";
+
   tickClock(); setInterval(tickClock, 1000);
-  initWeather();
   keepAwake();
   setupUpload();
-  await loadAll();
-  await loadSettings();
-  subscribeRealtime();
-  subscribeSettings();
-  if(playlist.length){
-    started = true; $("#tapStart").style.display="none";
-    idx=0; playCurrent();
-    setTimeout(()=>{ if(vid.paused && imgEl.style.display==="none"){ started=false; $("#tapStart").style.display="flex"; } }, 1500);
+
+  // Passo 1: carrega cache local
+  allItems = loadPlaylistCache();
+  const cachedCfg = loadSettingsCache();
+  if (cachedCfg) settings = cachedCfg;
+  rebuildPlaylist();
+  renderMarquee();
+
+  // Passo 2: inicia reprodução imediatamente se tiver cache
+  if (allItems.length) {
+    started = true;
+    $("#tapStart").style.display = "none";
+    idx = 0;
+    await playCurrent();
+    setTimeout(() => {
+      if (vid.paused && imgEl.style.display === "none") {
+        started = false; $("#tapStart").style.display = "flex";
+      }
+    }, 1500);
   } else {
-    started=true; $("#tapStart").style.display="none";
+    // Sem cache: esconde tapStart, mostra tela vazia até ter conteúdo
+    started = true;
+    $("#tapStart").style.display = "none";
+  }
+
+  // Passo 3: clima (não bloqueia)
+  initWeather();
+
+  // Passo 4: sincroniza com Supabase se online
+  if (isOnline) {
+    await loadAll();
+    await loadSettings();
+    cacheAllVideos(); // background — não aguarda
+    subscribeRealtime();
+    subscribeSettings();
+  } else {
+    toast("Modo offline — reproduzindo do cache");
   }
 }
+
 init();
 </script>
 </body>
