@@ -24,51 +24,55 @@
     --grad:linear-gradient(135deg,#3b82f6,#8b5cf6);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  *,*::before,*::after{box-sizing:border-box}
   html,body{margin:0;padding:0;height:100%;width:100%;background:var(--bg);
     color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
     overflow:hidden;user-select:none}
   #app{position:fixed;inset:0}
 
   /* ===================== PLAYER ===================== */
-  /* object-fit:cover — preenche a tela (ideal para vídeos verticais) */
+  /* Landscape (16:9) — preenche 100% da tela sem distorção */
   #player{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center}
   #player video,#player img{width:100%;height:100%;object-fit:cover;background:#000}
   #player.contain video,#player.contain img{object-fit:contain}
 
-  /* ---- Widget de relógio + clima ---- */
-  #infoWidget{position:absolute;top:16px;left:16px;right:auto;z-index:25;text-align:left;
-    background:rgba(10,13,20,.20);backdrop-filter:blur(10px) saturate(135%);
-    -webkit-backdrop-filter:blur(10px) saturate(135%);
-    border:1px solid rgba(255,255,255,.09);border-radius:12px;
-    padding:8px 11px;color:#fff;
-    box-shadow:0 6px 20px rgba(0,0,0,.28);
-    transition:opacity .4s}
-  #infoWidget.hide{opacity:0;pointer-events:none}
-  .iw-time{font-size:30px;font-weight:800;line-height:1;letter-spacing:-.5px;font-variant-numeric:tabular-nums;
-    display:flex;align-items:baseline;gap:4px;justify-content:flex-start}
-  .iw-time .sec{font-size:13px;font-weight:600;color:var(--accent-2);opacity:.85}
-  .iw-date{font-size:11px;color:#c6d0e0;margin-top:3px;text-transform:capitalize}
-  .iw-sep{height:1px;background:rgba(255,255,255,.10);margin:8px 0}
-  .iw-weather{display:flex;align-items:center;gap:9px;justify-content:flex-start}
-  .iw-ico{font-size:26px;line-height:1}
-  .iw-temp{font-size:22px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
-  .iw-wcol{display:flex;flex-direction:column;gap:1px;text-align:left}
-  .iw-cond{font-size:9.5px;color:#dde5f0;text-transform:capitalize}
-  .iw-mm{font-size:9px;color:var(--muted)}
-  .iw-foot{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:9px;color:#9fb0c9;justify-content:flex-start}
-  .iw-dot{width:5px;height:5px;border-radius:50%;background:var(--danger);box-shadow:0 0 6px var(--danger)}
+  /* ---- Widget de relógio + clima — canto superior esquerdo ---- */
+  #infoWidget{position:absolute;top:18px;left:20px;right:auto;z-index:25;text-align:left;
+    background:rgba(10,13,20,.35);backdrop-filter:blur(12px) saturate(140%);
+    -webkit-backdrop-filter:blur(12px) saturate(140%);
+    border:1px solid rgba(255,255,255,.10);border-radius:14px;
+    padding:10px 14px;color:#fff;
+    box-shadow:0 6px 24px rgba(0,0,0,.40);
+    transition:opacity .6s ease, transform .6s ease;min-width:180px}
+  #infoWidget.hide,#infoWidget.cycle-hidden{opacity:0;pointer-events:none;transform:translateY(-18px)}
+  .iw-time{font-size:38px;font-weight:800;line-height:1;letter-spacing:-.5px;font-variant-numeric:tabular-nums;
+    display:flex;align-items:baseline;gap:5px;justify-content:flex-start}
+  .iw-time .sec{font-size:16px;font-weight:600;color:var(--accent-2);opacity:.85}
+  .iw-date{font-size:12px;color:#c6d0e0;margin-top:4px;text-transform:capitalize}
+  .iw-sep{height:1px;background:rgba(255,255,255,.12);margin:9px 0}
+  .iw-weather{display:flex;align-items:center;gap:10px;justify-content:flex-start}
+  .iw-ico{font-size:30px;line-height:1}
+  .iw-temp{font-size:26px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .iw-wcol{display:flex;flex-direction:column;gap:2px;text-align:left}
+  .iw-cond{font-size:11px;color:#dde5f0;text-transform:capitalize}
+  .iw-mm{font-size:10px;color:var(--muted)}
+  .iw-foot{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:10px;color:#9fb0c9;justify-content:flex-start}
+  .iw-dot{width:6px;height:6px;border-radius:50%;background:var(--danger);box-shadow:0 0 6px var(--danger)}
   .iw-dot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
 
   /* ---- Letreiro de avisos (rodapé) ---- */
-  #marquee{position:absolute;left:0;right:0;bottom:0;z-index:26;display:none;align-items:stretch;
-    height:6.2vh;min-height:44px;background:linear-gradient(90deg,rgba(8,11,17,.94),rgba(8,11,17,.80));
-    border-top:1px solid rgba(255,255,255,.09);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-  #marquee.show{display:flex}
-  .mq-label{flex:none;display:flex;align-items:center;gap:8px;padding:0 20px;
-    background:var(--grad);color:#fff;font-weight:800;font-size:15px;letter-spacing:.6px;white-space:nowrap}
+  /* Letreiro — rodapé da tela landscape */
+  #marquee{position:absolute;left:0;right:0;bottom:0;z-index:26;display:flex;align-items:stretch;
+    height:9vh;min-height:62px;background:linear-gradient(90deg,rgba(8,11,17,.96),rgba(8,11,17,.82));
+    border-top:1px solid rgba(255,255,255,.09);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    opacity:0;transform:translateY(100%);pointer-events:none;
+    transition:opacity .6s ease, transform .6s ease}
+  #marquee.show:not(.cycle-hidden){opacity:1;transform:translateY(0);pointer-events:auto}
+  .mq-label{flex:none;display:flex;align-items:center;gap:8px;padding:0 24px;
+    background:var(--grad);color:#fff;font-weight:800;font-size:16px;letter-spacing:.6px;white-space:nowrap}
   .mq-track{flex:1;overflow:hidden;position:relative;display:flex;align-items:center}
-  .mq-track span{display:inline-block;white-space:nowrap;padding-left:100%;
-    font-size:21px;font-weight:600;color:#f1f5f9;animation:mqscroll linear infinite}
+  .mq-track span{display:inline-block;white-space:pre;padding-left:100%;
+    font-size:22px;font-weight:600;color:#f1f5f9;animation:mqscroll linear infinite}
   @keyframes mqscroll{from{transform:translateX(0)}to{transform:translateX(-100%)}}
 
   /* Estado vazio */
@@ -86,92 +90,180 @@
   #tapStart .btn{margin-top:8px;padding:16px 46px;border-radius:14px;background:var(--grad);
     color:#fff;font-size:22px;font-weight:700;border:none;box-shadow:0 10px 30px rgba(59,130,246,.4)}
 
+  /* ---- Escolha do aparelho (só na 1ª abertura de cada aparelho) ---- */
+  #devPick{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+    gap:16px;background:radial-gradient(1200px 600px at 50% 35%,#10151f,#000);z-index:45;padding:24px}
+  #devPick .logo{font-size:34px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  #devPick .hint{color:var(--muted);font-size:17px;text-align:center;max-width:520px}
+  #devPickList{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:8px;max-width:760px}
+  .devpick-btn{display:flex;align-items:center;gap:10px;padding:16px 30px;border-radius:14px;
+    background:var(--panel3);color:var(--txt);font-size:19px;font-weight:700;cursor:pointer;
+    border:1px solid var(--line2);transition:transform .12s ease,border-color .12s ease}
+  .devpick-btn:hover,.devpick-btn:focus{border-color:var(--accent);transform:translateY(-2px);outline:none}
+  .devpick-ico{font-size:24px}
+
   /* ===================== ADMIN ===================== */
-  #admin{position:absolute;inset:0;z-index:40;background:
+  #admin{position:absolute;inset:0;z-index:40;overflow:hidden;background:
     radial-gradient(1000px 700px at 85% -10%,rgba(59,130,246,.10),transparent 60%),
     radial-gradient(900px 600px at 0% 110%,rgba(139,92,246,.10),transparent 55%),
     var(--panel);display:none;flex-direction:column}
   #admin.open{display:flex}
-  .topbar{display:flex;align-items:center;gap:14px;padding:16px 26px;border-bottom:1px solid var(--line);
-    background:rgba(18,22,31,.7);backdrop-filter:blur(10px)}
-  .topbar .brand{display:flex;align-items:center;gap:12px}
-  .topbar .logo-badge{width:40px;height:40px;border-radius:12px;background:var(--grad);display:flex;align-items:center;
-    justify-content:center;font-size:20px;box-shadow:0 6px 18px rgba(59,130,246,.35)}
-  .topbar h1{font-size:19px;margin:0;font-weight:800;letter-spacing:-.3px}
-  .topbar .sub{font-size:12px;color:var(--muted);margin-top:1px}
+
+  /* --- Topbar responsiva --- */
+  .topbar{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line);
+    background:rgba(18,22,31,.88);backdrop-filter:blur(12px);flex-shrink:0}
+  .topbar .brand{display:flex;align-items:center;gap:10px;flex:none;min-width:0}
+  .topbar .logo-badge{width:38px;height:38px;border-radius:11px;background:var(--grad);display:flex;align-items:center;
+    justify-content:center;font-size:18px;box-shadow:0 4px 14px rgba(59,130,246,.35);flex:none}
+  .topbar h1{font-size:17px;margin:0;font-weight:800;letter-spacing:-.3px;white-space:nowrap}
+  .topbar .sub{font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap}
   .topbar .spacer{flex:1}
-  .pill{font-size:12px;padding:7px 13px;border-radius:999px;background:#1a2130;border:1px solid var(--line2);
-    color:#cbd3e1;display:flex;gap:8px;align-items:center;font-weight:600}
-  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--danger)}
+  .topbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;flex:none}
+  .pill{font-size:12px;padding:6px 12px;border-radius:999px;background:#1a2130;border:1px solid var(--line2);
+    color:#cbd3e1;display:flex;gap:7px;align-items:center;font-weight:600;white-space:nowrap;flex:none}
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--danger);flex:none}
   .pill.online{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.4);color:#86efac}
   .pill.online .dot{background:var(--green);box-shadow:0 0 8px var(--green)}
+  /* Mobile: esconde título e texto dos botões */
+  @media(max-width:620px){
+    .topbar{padding:10px 14px}
+    .topbar h1,.topbar .sub{display:none}
+    .btn-lbl{display:none}
+    .topbar-actions .pill #connText{display:none}
+  }
+  @media(max-width:420px){
+    .topbar-actions{gap:5px}
+    .pill{padding:5px 8px}
+    .btn.sm{padding:7px 9px}
+  }
 
-  .admin-body{flex:1;overflow:auto;padding:26px;display:grid;grid-template-columns:1fr;gap:24px;max-width:1180px;width:100%;margin:0 auto}
-  @media(min-width:1000px){.admin-body{grid-template-columns:400px 1fr}}
+  /* --- Admin body --- */
+  .admin-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px;
+    display:grid;grid-template-columns:1fr;gap:14px;
+    max-width:1200px;width:100%;margin:0 auto;align-content:start}
+  @media(min-width:640px){.admin-body{padding:20px;gap:18px}}
+  @media(min-width:1060px){.admin-body{padding:26px;gap:22px;grid-template-columns:400px 1fr}}
+  /* Scrollbar fina e discreta — não empurra conteúdo */
+  .admin-body::-webkit-scrollbar{width:5px}
+  .admin-body::-webkit-scrollbar-track{background:transparent}
+  .admin-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.13);border-radius:3px}
+  .admin-body::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.25)}
 
-  .card{background:linear-gradient(180deg,rgba(23,28,39,.9),rgba(18,22,31,.9));
-    border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
-  .card h2{margin:0 0 18px;font-size:15px;font-weight:800;display:flex;align-items:center;gap:10px;letter-spacing:-.2px}
-  .card h2 .hico{width:30px;height:30px;border-radius:9px;background:rgba(59,130,246,.15);display:flex;align-items:center;justify-content:center;font-size:15px}
-  .field{margin-bottom:15px}
-  label{display:block;font-size:12px;color:var(--muted);margin-bottom:7px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
-  input,select,textarea{width:100%;padding:13px 15px;border-radius:12px;border:1px solid var(--line2);
-    background:#0a0d13;color:var(--txt);font-size:15px;outline:none;transition:border .15s,box-shadow .15s}
+  /* --- Cards --- */
+  .card{background:linear-gradient(180deg,rgba(23,28,39,.96),rgba(18,22,31,.96));
+    border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(0,0,0,.22)}
+  @media(min-width:640px){.card{border-radius:18px;padding:20px}}
+  @media(min-width:1060px){.card{border-radius:20px;padding:22px}}
+  .card h2{margin:0 0 14px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:9px;letter-spacing:-.2px}
+  .card h2 .hico{width:28px;height:28px;border-radius:8px;background:rgba(59,130,246,.15);
+    display:flex;align-items:center;justify-content:center;font-size:14px;flex:none}
+
+  /* --- Formulário --- */
+  .field{margin-bottom:13px}
+  label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  input,select,textarea{width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--line2);
+    background:#0a0d13;color:var(--txt);font-size:14px;outline:none;transition:border .15s,box-shadow .15s}
   input::placeholder{color:var(--muted2)}
   input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.18)}
-  .row{display:flex;gap:12px}
-  .row > *{flex:1}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border-radius:12px;
-    border:none;font-size:14px;font-weight:700;cursor:pointer;background:#222a3a;color:var(--txt);transition:transform .08s,filter .15s,background .15s}
+  .row{display:flex;gap:10px}
+  .row > *{flex:1;min-width:0}
+
+  /* --- Botões --- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 15px;border-radius:10px;
+    border:none;font-size:13px;font-weight:700;cursor:pointer;background:#222a3a;color:var(--txt);
+    transition:transform .08s,filter .15s,background .15s;white-space:nowrap;flex:none}
   .btn:hover{filter:brightness(1.12)}
   .btn:active{transform:scale(.97)}
   .btn:focus-visible{outline:3px solid rgba(59,130,246,.6)}
-  .btn.primary{background:var(--grad);color:#fff;box-shadow:0 6px 18px rgba(59,130,246,.3)}
+  .btn.primary{background:var(--grad);color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.3)}
   .btn.green{background:linear-gradient(135deg,#16a34a,#22c55e);color:#04210f}
   .btn.danger{background:rgba(239,68,68,.14);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
   .btn.danger:hover{background:var(--danger);color:#fff}
   .btn.ghost{background:transparent;border:1px solid var(--line2);color:#c6d0e0}
-  .btn.sm{padding:9px 12px;font-size:13px;border-radius:10px}
+  .btn.sm{padding:7px 10px;font-size:12px;border-radius:9px}
   .btn:disabled{opacity:.45;cursor:not-allowed;filter:none;transform:none}
 
-  .uploadZone{border:1.5px dashed var(--line2);border-radius:14px;padding:20px;text-align:center;color:var(--muted);
-    font-size:14px;background:rgba(59,130,246,.04);transition:border .15s,background .15s}
+  /* --- Upload --- */
+  .uploadZone{border:1.5px dashed var(--line2);border-radius:12px;padding:18px;text-align:center;color:var(--muted);
+    font-size:13px;background:rgba(59,130,246,.04);transition:border .15s,background .15s}
   .uploadZone:hover{border-color:var(--accent);background:rgba(59,130,246,.08)}
-  .progress{height:8px;background:#0a0d13;border-radius:999px;overflow:hidden;margin-top:12px;display:none}
+  .progress{height:7px;background:#0a0d13;border-radius:999px;overflow:hidden;margin-top:10px;display:none}
   .progress.show{display:block}
   .progress > div{height:100%;width:0;background:var(--grad);transition:width .2s}
   .divider{display:flex;align-items:center;gap:12px;color:var(--muted2);font-size:12px;margin:14px 0;text-transform:uppercase;letter-spacing:1px}
   .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
 
-  .list{display:flex;flex-direction:column;gap:12px}
-  .item{display:flex;gap:15px;align-items:center;background:rgba(10,13,19,.7);border:1px solid var(--line);
-    border-radius:15px;padding:13px;position:relative;overflow:hidden;transition:border .15s,transform .08s}
-  .item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--muted2)}
+  /* --- Lista de itens ---
+     Layout: thumb (esquerda, 2 linhas) | meta (linha 1) / acts (linha 2)
+     Garante que os botões NUNCA sejam cortados. */
+  .list{display:flex;flex-direction:column;gap:10px}
+  .item{display:grid;grid-template-columns:88px 1fr;grid-template-rows:auto auto;
+    column-gap:11px;row-gap:7px;
+    background:rgba(10,13,19,.7);border:1px solid var(--line);
+    border-radius:13px;padding:11px 11px 10px 14px;position:relative;transition:border .15s;
+    box-shadow:inset 3px 0 0 var(--muted2)}
   .item.inactive{opacity:.55}
-  .item.inactive::before{background:var(--muted2)}
-  .item:not(.inactive)::before{background:var(--accent)}
-  .item.playing{border-color:rgba(34,197,94,.5);box-shadow:0 0 0 1px rgba(34,197,94,.4)}
-  .item.playing::before{background:var(--green)}
-  .thumb{width:104px;height:60px;border-radius:10px;background:#000;flex:none;border:1px solid var(--line2);
-    display:flex;align-items:center;justify-content:center;font-size:26px;position:relative}
-  .thumb .liveTag{position:absolute;bottom:4px;left:4px;font-size:9px;font-weight:800;background:var(--green);color:#04210f;padding:1px 5px;border-radius:5px;letter-spacing:.5px}
-  .item .meta{flex:1;min-width:0}
-  .item .meta .t{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px}
-  .item .meta .s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
-  .item .acts{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end;max-width:300px}
-  .tag{font-size:10px;padding:3px 8px;border-radius:999px;background:#1f2937;color:#9fb0c9;font-weight:700;letter-spacing:.3px}
+  .item:not(.inactive){box-shadow:inset 3px 0 0 var(--accent)}
+  .item.playing{border-color:rgba(34,197,94,.5);box-shadow:inset 3px 0 0 var(--green),0 0 0 1px rgba(34,197,94,.3)}
+  .thumb{grid-row:1/3;width:88px;height:52px;border-radius:9px;background:#000;border:1px solid var(--line2);
+    display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;align-self:center}
+  .thumb .liveTag{position:absolute;bottom:3px;left:3px;font-size:8px;font-weight:800;background:var(--green);
+    color:#04210f;padding:1px 4px;border-radius:4px;letter-spacing:.5px}
+  .thumb .rotTag{position:absolute;top:3px;right:3px;font-size:8px;font-weight:800;
+    background:rgba(245,158,11,.9);color:#000;padding:1px 4px;border-radius:4px;letter-spacing:.3px}
+  .item .meta{grid-column:2;grid-row:1;min-width:0}
+  .item .meta .t{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    display:flex;align-items:center;gap:7px}
+  .item .meta .s{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .item .acts{grid-column:2;grid-row:2;display:flex;gap:5px;flex-wrap:wrap;align-items:center;justify-content:flex-start}
+  /* Tela muito pequena: thumb fica acima de tudo */
+  @media(max-width:420px){
+    .item{grid-template-columns:1fr}
+    .thumb{grid-row:1;width:100%;height:48px;border-radius:8px}
+    .item .meta{grid-column:1;grid-row:2}
+    .item .acts{grid-column:1;grid-row:3}
+  }
+  .tag{font-size:10px;padding:2px 7px;border-radius:999px;background:#1f2937;color:#9fb0c9;font-weight:700;letter-spacing:.3px}
   .tag.video{background:rgba(59,130,246,.18);color:#93c5fd}
   .tag.image{background:rgba(34,197,94,.16);color:#86efac}
   .tag.cached{background:rgba(34,197,94,.12);color:#6ee7b7}
 
   .muted{color:var(--muted);font-size:13px}
-  .empty-list{padding:40px;text-align:center;color:var(--muted);border:1.5px dashed var(--line2);border-radius:14px}
-  .empty-list .ico{font-size:40px;opacity:.5;margin-bottom:10px}
+  .empty-list{padding:32px 16px;text-align:center;color:var(--muted);border:1.5px dashed var(--line2);border-radius:13px}
+  .empty-list .ico{font-size:34px;opacity:.5;margin-bottom:10px}
+
+  /* --- Card Dispositivo: linhas internas responsivas --- */
+  .dev-row{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .dev-row-info{flex:1;min-width:0}
+  .dev-row-info .dev-title{font-weight:700;font-size:14px}
+  .dev-row-info .dev-desc{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.6}
+  .dev-row-ctrl{display:flex;align-items:center;gap:10px;flex:none}
+  .dev-row-conn{display:flex;align-items:flex-start;gap:14px;padding-top:14px;flex-wrap:wrap}
+  @media(max-width:480px){
+    .dev-row{flex-wrap:wrap}
+    .dev-row-ctrl{width:100%;margin-top:10px}
+  }
+
+  /* Biblioteca R2 (enviados) */
+  .r2grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .r2card{background:rgba(10,13,19,.7);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .r2thumb{position:relative;width:100%;aspect-ratio:16/10;background:#000;display:flex;align-items:center;justify-content:center;font-size:30px;overflow:hidden}
+  .r2thumb img,.r2thumb video{width:100%;height:100%;object-fit:cover}
+  .r2thumb .r2type{position:absolute;top:5px;left:5px;font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;letter-spacing:.3px}
+  .r2thumb .r2type.video{background:rgba(59,130,246,.9);color:#fff}
+  .r2thumb .r2type.image{background:rgba(34,197,94,.9);color:#04210f}
+  .r2thumb .r2inuse{position:absolute;bottom:5px;right:5px;font-size:9px;font-weight:800;background:rgba(34,197,94,.9);color:#04210f;padding:1px 6px;border-radius:5px}
+  .r2body{padding:9px 10px;display:flex;flex-direction:column;gap:7px;flex:1}
+  .r2name{font-size:12px;font-weight:600;word-break:break-word;line-height:1.3;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .r2meta{font-size:11px;color:var(--muted)}
+  .r2acts{display:flex;gap:6px;margin-top:auto}
+  .r2acts .btn{flex:1;padding:7px 6px;font-size:11px}
 
   /* PIN gate */
   #pin{position:absolute;inset:0;z-index:50;background:rgba(0,0,0,.92);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center}
   #pin.open{display:flex}
-  #pin .box{background:linear-gradient(180deg,#171c27,#10141c);border:1px solid var(--line2);border-radius:22px;padding:32px;width:350px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  #pin .box{background:linear-gradient(180deg,#171c27,#10141c);border:1px solid var(--line2);border-radius:22px;padding:28px;width:min(350px,92vw);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
   #pin .lk{width:54px;height:54px;border-radius:16px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(59,130,246,.4)}
   #pin h3{margin:0 0 4px;font-size:19px}
   #pin .dots{display:flex;gap:13px;justify-content:center;margin:22px 0}
@@ -184,12 +276,35 @@
   #pin .pad button:focus-visible{outline:3px solid rgba(59,130,246,.6)}
   #pin .err{color:var(--danger);font-size:13px;height:16px;font-weight:600}
 
+  /* ---- Diálogo de remoção (separa "tirar da playlist" de "excluir arquivo") ---- */
+  #ask{position:absolute;inset:0;z-index:55;background:rgba(0,0,0,.86);backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;padding:20px}
+  #ask.open{display:flex}
+  #ask .box{background:linear-gradient(180deg,#171c27,#10141c);border:1px solid var(--line2);
+    border-radius:20px;padding:24px;width:min(460px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  #ask h3{margin:0 0 6px;font-size:18px}
+  #ask .sub{color:var(--muted);font-size:13px;line-height:1.5;margin-bottom:16px;word-break:break-word}
+  #ask .opts{display:flex;flex-direction:column;gap:10px}
+  #ask button{padding:14px 16px;border-radius:13px;border:1px solid var(--line2);background:#0c1018;
+    color:var(--txt);font-size:14px;font-weight:700;cursor:pointer;text-align:left;transition:background .12s,border-color .12s}
+  #ask button:hover,#ask button:focus-visible{background:#1a2130;border-color:var(--accent);outline:none}
+  #ask button .d{display:block;font-size:11.5px;font-weight:500;color:var(--muted);margin-top:3px}
+  #ask button.danger{border-color:rgba(239,68,68,.45)}
+  #ask button.danger:hover,#ask button.danger:focus-visible{background:rgba(239,68,68,.12);border-color:var(--danger)}
+  #ask button.danger[disabled]{opacity:.45;cursor:not-allowed}
+  #ask button.ghost{text-align:center;color:var(--muted);font-weight:600}
+  #ask .warn{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);color:#fbbf24;
+    border-radius:11px;padding:10px 12px;font-size:12px;line-height:1.5;margin-bottom:14px}
+
   /* Toast */
   #toast{position:absolute;bottom:26px;left:50%;transform:translateX(-50%) translateY(10px);z-index:60;
     background:rgba(12,16,24,.95);border:1px solid var(--line2);padding:13px 22px;border-radius:14px;font-size:14px;font-weight:600;
     opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;max-width:90%;box-shadow:0 12px 40px rgba(0,0,0,.5)}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+  /* ---- Overlay (widget + letreiro) — gira junto com a mídia ---- */
+  #overlay{position:absolute;inset:0;z-index:25;pointer-events:none}
+  #overlay .corner-hit{pointer-events:auto}
   .corner-hit{position:absolute;top:0;right:0;width:120px;height:120px;z-index:28}
   .small-link{position:absolute;bottom:10px;right:14px;z-index:26;font-size:11px;color:#2a333f}
 </style>
@@ -209,27 +324,34 @@
     </div>
   </div>
 
-  <!-- Widget relógio + clima -->
-  <div id="infoWidget">
-    <div class="iw-time"><span id="iwTime">--:--</span><span class="sec" id="iwSec"></span></div>
-    <div class="iw-date" id="iwDate">—</div>
-    <div class="iw-sep"></div>
-    <div class="iw-weather">
-      <span class="iw-ico" id="iwIco">⛅</span>
-      <span class="iw-temp" id="iwTemp">--°</span>
-      <div class="iw-wcol">
-        <span class="iw-cond" id="iwCond">carregando…</span>
-        <span class="iw-mm" id="iwMM"></span>
-      </div>
-    </div>
-    <div class="iw-foot"><span class="iw-dot" id="iwDot"></span><span id="iwCity">—</span></div>
-  </div>
+  <!-- Overlay: widget + letreiro + corner — giram juntos com a mídia atual -->
+  <div id="overlay">
 
-  <!-- Letreiro de avisos -->
-  <div id="marquee">
-    <div class="mq-label">📢 AVISO</div>
-    <div class="mq-track"><span id="mqText"></span></div>
-  </div>
+    <!-- Widget relógio + clima -->
+    <div id="infoWidget">
+      <div class="iw-time"><span id="iwTime">--:--</span><span class="sec" id="iwSec"></span></div>
+      <div class="iw-date" id="iwDate">—</div>
+      <div class="iw-sep"></div>
+      <div class="iw-weather">
+        <span class="iw-ico" id="iwIco">⛅</span>
+        <span class="iw-temp" id="iwTemp">--°</span>
+        <div class="iw-wcol">
+          <span class="iw-cond" id="iwCond">carregando…</span>
+          <span class="iw-mm" id="iwMM"></span>
+        </div>
+      </div>
+      <div class="iw-foot"><span class="iw-dot" id="iwDot"></span><span id="iwCity">—</span></div>
+    </div>
+
+    <!-- Letreiro de avisos -->
+    <div id="marquee">
+      <div class="mq-track"><span id="mqText"></span></div>
+    </div>
+
+    <div class="corner-hit" id="cornerHit"></div>
+    <div class="small-link">v2.0</div>
+
+  </div><!-- /overlay -->
 
   <!-- Início -->
   <div id="tapStart">
@@ -238,8 +360,13 @@
     <button class="btn" id="startBtn">Iniciar</button>
   </div>
 
-  <div class="corner-hit" id="cornerHit"></div>
-  <div class="small-link">v2.0</div>
+  <!-- Escolha do aparelho — aparece só na primeira abertura -->
+  <div id="devPick">
+    <div class="logo">🎬 Mídia Elevadores</div>
+    <div class="hint">Qual aparelho é este? A escolha fica salva — cada aparelho exibe apenas os vídeos da sua playlist.</div>
+    <div id="devPickList"></div>
+    <div class="hint" style="font-size:13px;opacity:.7">Dá para trocar depois no Admin (botão Menu do controle).</div>
+  </div>
 
   <!-- ===================== ADMIN ===================== -->
   <div id="admin">
@@ -252,12 +379,99 @@
         </div>
       </div>
       <div class="spacer"></div>
-      <span class="pill" id="connBadge"><span class="dot"></span><span id="connText">offline</span></span>
-      <button class="btn ghost sm" id="reloadBtn">↻ Recarregar</button>
-      <button class="btn primary sm" id="closeAdmin">▶ Voltar ao Player</button>
+      <div class="topbar-actions">
+        <span class="pill" id="connBadge"><span class="dot"></span><span id="connText">offline</span></span>
+        <button class="btn ghost sm" id="screenRotBtn" title="Girar tela (monitor vertical)">🖥️ <span class="btn-lbl">Landscape</span></button>
+        <button class="btn ghost sm" id="reloadBtn" title="Recarregar">↻ <span class="btn-lbl">Recarregar</span></button>
+        <button class="btn primary sm" id="closeAdmin">▶ <span class="btn-lbl">Player</span></button>
+      </div>
     </div>
 
     <div class="admin-body">
+
+      <!-- Aparelho — define QUAL playlist este app exibe e administra -->
+      <div class="card" style="grid-column:1/-1">
+        <h2><span class="hico">🛗</span>Aparelho</h2>
+
+        <div class="dev-row">
+          <div class="dev-row-info">
+            <div class="dev-title">Este aparelho é: <b id="devNameLbl" style="color:var(--accent-2)">—</b></div>
+            <div class="dev-desc">
+              Cada aparelho (Elevador 1, Elevador 2, Totem 1…) tem a <b>sua própria playlist e seus próprios avisos</b>.<br>
+              Trocar aqui muda o que <b>esta tela</b> exibe e qual playlist os campos abaixo administram. A escolha fica salva no aparelho.
+            </div>
+          </div>
+          <div class="dev-row-ctrl">
+            <select id="devSelect" style="min-width:190px"></select>
+          </div>
+        </div>
+
+        <div class="dev-row">
+          <div class="dev-row-info">
+            <div class="dev-title">Adicionar novo aparelho</div>
+            <div class="dev-desc">
+              Cadastre o nome; depois selecione-o acima para montar a playlist dele.<br>
+              No aparelho novo (TV Box/Fire TV), basta abrir o app e escolher esse nome na primeira tela.
+            </div>
+          </div>
+          <div class="dev-row-ctrl" style="gap:8px;flex-wrap:wrap">
+            <input id="devNewName" placeholder="Ex.: Totem 1" style="min-width:150px" />
+            <select id="devNewKind" style="min-width:120px">
+              <option value="elevador">🛗 Elevador</option>
+              <option value="totem">📺 Totem</option>
+              <option value="outro">📱 Outro</option>
+            </select>
+            <button class="btn primary sm" id="devAddBtn" type="button">➕ Criar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configurações do dispositivo — TOPO para fácil acesso -->
+      <div class="card" style="grid-column:1/-1">
+        <h2><span class="hico">📱</span>Dispositivo (Fire TV)</h2>
+
+        <!-- Auto-iniciar -->
+        <div class="dev-row">
+          <div class="dev-row-info">
+            <div class="dev-title">Iniciar automaticamente com o Fire TV</div>
+            <div class="dev-desc">
+              Quando <b style="color:var(--green)">Ativo</b>: o app abre e reproduz sozinho ao ligar o Fire TV.<br>
+              Quando <b style="color:var(--danger)">Desativado</b>: Fire TV inicia normalmente — útil para acessar configurações de rede.
+            </div>
+          </div>
+          <label class="dev-row-ctrl" style="margin:0;cursor:pointer">
+            <input type="checkbox" id="autoStartToggle" style="width:22px;height:22px;flex:none;accent-color:var(--green)" checked>
+            <span id="autoStartLabel" style="font-size:14px;font-weight:700;color:var(--green);min-width:76px">✅ Ativo</span>
+          </label>
+        </div>
+
+        <!-- Status de conexão / online-offline -->
+        <div class="dev-row-conn">
+          <div class="dev-row-info">
+            <div class="dev-title">Reconexão automática (Elevador)</div>
+            <div class="dev-desc">
+              Offline no elevador: reproduz do cache local sem interrupção.<br>
+              Ao reconectar (portas abertas): sincroniza playlist, baixa vídeos novos e ativa Realtime.
+            </div>
+          </div>
+          <span class="pill" id="connBadge2"><span class="dot" id="connDot2"></span><span id="connText2">offline</span></span>
+        </div>
+
+        <!-- Cache de mídia -->
+        <div class="dev-row">
+          <div class="dev-row-info">
+            <div class="dev-title">Cache local de mídia</div>
+            <div class="dev-desc">
+              Vídeos e fotos são salvos localmente para reprodução offline.<br>
+              Se algum vídeo ficar com <b style="color:var(--danger)">tela preta</b> ou travar, limpe o cache — será baixado novamente do servidor.
+            </div>
+          </div>
+          <div class="dev-row-ctrl">
+            <button class="btn danger sm" id="clearCacheBtn">🗑 Limpar cache</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Coluna esquerda: adicionar -->
       <div class="card" id="addCard">
         <h2><span class="hico">➕</span><span id="addTitle">Adicionar mídia</span></h2>
@@ -297,6 +511,19 @@
             <input id="fDur" type="number" min="1" value="10" />
           </div>
         </div>
+        <div class="field">
+          <label>Rotação</label>
+          <select id="fRotation">
+            <option value="0">0° — Original (vertical filmado na vertical)</option>
+            <option value="90">↻ 90° — Girar direita (paisagem → vertical)</option>
+            <option value="180">↻ 180° — De cabeça para baixo</option>
+            <option value="270">↺ 270° — Girar esquerda</option>
+          </select>
+          <div class="muted" style="font-size:11px;margin-top:5px">
+            🎬 Vídeo: a rotação é <b>gravada no arquivo</b> ao enviar (sem perda — funciona no Fire TV).
+            🖼️ Imagem: rotação por software.
+          </div>
+        </div>
         <button class="btn green" id="saveBtn" style="width:100%;padding:15px">+ Adicionar à playlist</button>
         <div class="muted" id="editHint" style="margin-top:12px;display:none"></div>
       </div>
@@ -304,6 +531,7 @@
       <!-- Coluna direita: playlist -->
       <div class="card">
         <h2><span class="hico">📋</span>Playlist
+          <span class="muted" id="playlistDevLbl" style="font-weight:600;color:var(--accent-2)"></span>
           <span class="muted" id="count" style="font-weight:600">0 itens</span>
           <span style="flex:1"></span>
           <button class="btn ghost sm" id="coverToggle" type="button">⛶ Cover</button>
@@ -311,6 +539,22 @@
         <div class="list" id="list"></div>
         <div class="empty-list" id="emptyList" style="display:none">
           <div class="ico">🎞️</div>Nenhuma mídia cadastrada ainda.
+        </div>
+      </div>
+
+      <!-- Biblioteca de mídia enviada (R2) -->
+      <div class="card" style="grid-column:1/-1">
+        <h2><span class="hico">📤</span>Enviados (arquivos no servidor R2)
+          <span class="muted" id="r2Count" style="font-weight:600">—</span>
+          <span style="flex:1"></span>
+          <button class="btn ghost sm" id="r2Refresh" type="button">↻ Atualizar</button>
+        </h2>
+        <div class="muted" style="margin:-6px 0 12px;font-size:12px">
+          Todos os vídeos e fotos já enviados. Use na playlist ou exclua de vez do servidor (libera espaço).
+        </div>
+        <div class="r2grid" id="r2List"></div>
+        <div class="empty-list" id="r2Empty" style="display:none">
+          <div class="ico">📤</div>Nenhum arquivo enviado ainda.
         </div>
       </div>
 
@@ -329,6 +573,57 @@
           <button class="btn ghost sm" id="mqClear" type="button">Limpar</button>
           <button class="btn primary" id="mqSave">💾 Salvar aviso</button>
         </div>
+      </div>
+
+      <!-- Tempo de exibição (relógio/clima e aviso) -->
+      <div class="card" style="grid-column:1/-1">
+        <h2><span class="hico">⏱️</span>Exibição automática (relógio/clima e aviso)</h2>
+        <div class="muted" style="font-size:12px;margin-top:-6px;margin-bottom:14px">
+          Cada widget aparece na tela, some e volta a aparecer em ciclo contínuo, com efeito de entrada/saída.
+          Use <b>0</b> em "fica oculto" para deixar sempre visível (sem ciclo).
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px">
+          <div class="field">
+            <label>🕒 Relógio/clima — aparece por (s)</label>
+            <input type="number" id="clockShowSec" min="1" value="10">
+          </div>
+          <div class="field">
+            <label>🕒 Relógio/clima — fica oculto por (s)</label>
+            <input type="number" id="clockHideSec" min="0" value="20">
+          </div>
+          <div class="field">
+            <label>📢 Aviso — aparece por (s)</label>
+            <input type="number" id="mqShowSec" min="1" value="10">
+          </div>
+          <div class="field">
+            <label>📢 Aviso — fica oculto por (s)</label>
+            <input type="number" id="mqHideSec" min="0" value="20">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:4px">
+          <button class="btn primary" id="visSave">💾 Salvar tempos</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Diálogo de remoção: separa "tirar da playlist" de "excluir o arquivo" -->
+  <div id="ask">
+    <div class="box">
+      <h3 id="askTitle">Remover mídia</h3>
+      <div class="sub" id="askSub"></div>
+      <div class="warn" id="askWarn" style="display:none"></div>
+      <div class="opts">
+        <button type="button" id="askKeep">
+          🗑 Remover só da playlist
+          <span class="d">Tira da exibição deste aparelho. O arquivo continua no servidor (aba 📤 Enviados) e pode ser usado de novo.</span>
+        </button>
+        <button type="button" class="danger" id="askPurge">
+          ⛔ Remover e excluir o arquivo do servidor
+          <span class="d">Apaga o arquivo do R2 permanentemente. Não dá para desfazer.</span>
+        </button>
+        <button type="button" class="ghost" id="askCancel">Cancelar</button>
       </div>
     </div>
   </div>
@@ -367,13 +662,34 @@
 const CONFIG = {
   SUPABASE_URL:  "https://ktjmkstdcdxmjqkayivw.supabase.co",
   SUPABASE_ANON: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0am1rc3RkY2R4bWpxa2F5aXZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTY1ODYsImV4cCI6MjA5NjE3MjU4Nn0.EU-dERDImjQFr1ms5cTEsPyZbM3-xhWsBhNd9l-3aY4",
+  DEVICES_TABLE: "devices",
+
+  // ── Tabelas do Elevador 1 (LEGADO — não mexer) ──────────────────────
+  // O Fire TV do Elevador 1 continua com o APK ANTIGO, que lê `videos`
+  // sem filtro de aparelho e ouve o Realtime de `settings` sem filtro.
+  // Por isso essas duas tabelas são EXCLUSIVAS dele — travadas por CHECK
+  // no banco (ver supabase_devices_2_blindagem.sql). Nunca grave mídia de
+  // outro aparelho aqui: o Postgres rejeita, e o APK antigo tocaria.
   TABLE: "videos",
+  SETTINGS_TABLE: "settings",
+
+  // ── Tabelas dos demais aparelhos (Elevador 2, Totem 1…) ─────────────
+  // O APK antigo não conhece estas tabelas — nem lê, nem recebe Realtime.
+  DEVICE_TABLE: "device_videos",
+  DEVICE_SETTINGS_TABLE: "device_settings",
+
+  // Aparelho padrão (Elevador 1 — o que já estava em produção antes do
+  // multi-aparelho). UUID fixo, igual ao de supabase_devices.sql: é o
+  // default da coluna videos.device_id no banco. Não mude.
+  DEFAULT_DEVICE_ID: "00000000-0000-0000-0000-000000000001",
 
   // PIN para abrir o Admin (MUDE!)
   ADMIN_PIN: "2468",
 
   // Endpoint do Cloudflare Worker que faz upload para o R2 (rota /upload).
   R2_UPLOAD_ENDPOINT: "https://midiaelevadores.midiaelevadores.workers.dev/upload",
+  // URL pública do bucket R2 (usada para saber se um arquivo é nosso ao excluir).
+  R2_PUBLIC_BASE: "https://pub-a740ba9c1fc5448894f7c86b105db8b2.r2.dev",
 
   // Previsão do tempo: tenta localizar a cidade atual por IP automaticamente.
   WEATHER_DEFAULT: { lat: -7.2306, lon: -35.8811, city: "Campina Grande" },
@@ -383,6 +699,10 @@ const CONFIG = {
 /* =====================================================================
    ESTADO
    ===================================================================== */
+// Detecta se está rodando como APK nativo (Fire TV / Android)
+// No Fire TV: CSS transform no #app NÃO afeta a surface de hardware do vídeo.
+const IS_NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
 // sb pode ser null se o SDK não carregar (modo offline sem bundle local)
 const sb = window.supabase
   ? supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON, {
@@ -390,16 +710,22 @@ const sb = window.supabase
     })
   : null;
 
-let playlist     = [];     // itens ativos ordenados (player)
-let allItems     = [];     // todos os itens (admin)
-let idx          = 0;      // índice atual no player
-let started      = false;  // player iniciado
-let imgTimer     = null;   // timer de imagem
-let editingId    = null;   // id em edição
-let coverMode    = true;   // true = cover (preenche tela — padrão para vertical)
-let isOnline     = navigator.onLine;
-let rtChannel    = null;   // canal realtime de vídeos
-let settingsRtCh = null;   // canal realtime de settings
+let playlist       = [];     // itens ativos ordenados (player)
+let allItems       = [];     // todos os itens (admin)
+let idx            = 0;      // índice atual no player
+let started        = false;  // player iniciado
+let imgTimer       = null;   // timer de imagem
+let editingId      = null;   // id em edição
+let coverMode      = true;   // true = cover (preenche tela — padrão para vertical)
+let isOnline       = navigator.onLine;
+let rtChannel      = null;   // canal realtime de vídeos
+let settingsRtCh   = null;   // canal realtime de settings
+let globalRotation = 0;      // rotação global da tela: 0=landscape, 90=portrait-direita, 270=portrait-esquerda
+let deviceId       = null;   // aparelho DESTE app (Elevador 1, Totem 1…) — define playlist e settings
+let deviceName     = "";     // nome do aparelho atual (exibido no Admin)
+let devices        = [];     // lista de aparelhos cadastrados
+let clockOffsetMs  = 0;       // corrige relógio do dispositivo (Fire TV sem RTC/NTP fica com data/hora atrasada) usando o horário da API de clima
+let displayTZ      = null;    // fuso IANA (ex: "America/Sao_Paulo") da API de clima — exibe hora certa mesmo se o fuso do Fire TV estiver errado
 
 const $ = (s) => document.querySelector(s);
 const vid   = $("#vid");
@@ -426,6 +752,13 @@ function setConn(online) {
   $("#connBadge").classList.toggle("online", online);
   $("#connText").textContent = online ? "Tempo real ativo" : "offline";
   $("#iwDot").classList.toggle("on", online);
+  // Sincroniza o badge de conexão no card de Dispositivo
+  const b2 = document.getElementById("connBadge2");
+  const t2 = document.getElementById("connText2");
+  const d2 = document.getElementById("connDot2");
+  if (b2) b2.classList.toggle("online", online);
+  if (t2) t2.textContent = online ? "Online — Realtime ativo" : "Offline — cache local";
+  if (d2) d2.classList.toggle("on", online);
 }
 function escapeHtml(s) {
   return (s || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -436,17 +769,29 @@ function escapeHtml(s) {
    ===================================================================== */
 const CACHE_NS = "midia_v2";
 
+// O cache é por aparelho: trocar o aparelho no Admin não mistura a
+// playlist nem os avisos de um Totem com os de um Elevador.
+const plKey  = () => CACHE_NS + "_pl_"  + (deviceId || CONFIG.DEFAULT_DEVICE_ID);
+const cfgKey = () => CACHE_NS + "_cfg_" + (deviceId || CONFIG.DEFAULT_DEVICE_ID);
+
 function savePlaylistCache(items) {
-  try { localStorage.setItem(CACHE_NS + "_pl", JSON.stringify(items)); } catch (_) {}
+  try { localStorage.setItem(plKey(), JSON.stringify(items)); } catch (_) {}
 }
 function loadPlaylistCache() {
-  try { return JSON.parse(localStorage.getItem(CACHE_NS + "_pl") || "[]"); } catch (_) { return []; }
+  try { return JSON.parse(localStorage.getItem(plKey()) || "[]"); } catch (_) { return []; }
 }
 function saveSettingsCache(s) {
-  try { localStorage.setItem(CACHE_NS + "_cfg", JSON.stringify(s)); } catch (_) {}
+  try { localStorage.setItem(cfgKey(), JSON.stringify(s)); } catch (_) {}
 }
 function loadSettingsCache() {
-  try { return JSON.parse(localStorage.getItem(CACHE_NS + "_cfg") || "null"); } catch (_) { return null; }
+  try { return JSON.parse(localStorage.getItem(cfgKey()) || "null"); } catch (_) { return null; }
+}
+// Lista de aparelhos em cache — permite escolher/exibir o aparelho offline
+function saveDevicesCache(list) {
+  try { localStorage.setItem(CACHE_NS + "_devs", JSON.stringify(list)); } catch (_) {}
+}
+function loadDevicesCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_NS + "_devs") || "[]"); } catch (_) { return []; }
 }
 
 // IndexedDB para blobs de vídeo (offline playback)
@@ -486,13 +831,36 @@ async function idbPut(url, blob) {
     });
   } catch (_) {}
 }
+async function idbDelete(url) {
+  try {
+    const db = await openIDB();
+    return new Promise((res) => {
+      const tx = db.transaction("vids", "readwrite");
+      tx.objectStore("vids").delete(url);
+      tx.oncomplete = res;
+      tx.onerror    = res;
+    });
+  } catch (_) {}
+}
+async function idbAllKeys() {
+  try {
+    const db = await openIDB();
+    return new Promise((res) => {
+      const tx  = db.transaction("vids", "readonly");
+      const req = tx.objectStore("vids").getAllKeys();
+      req.onsuccess = () => res(req.result || []);
+      req.onerror   = () => res([]);
+    });
+  } catch (_) { return []; }
+}
 
 // Cache de ObjectURLs em memória (evita criar duplicatas)
 const _objUrls = new Map();
 
-// Retorna URL local (blob/objectURL) se disponível, senão a URL original
-async function localVideoUrl(url) {
-  if (!url || detectType(url, "auto") !== "video") return url;
+// Retorna URL local (blob/objectURL) de uma mídia (vídeo OU imagem) se cacheada,
+// senão devolve a URL original do CDN.
+async function localMediaUrl(url) {
+  if (!url) return url;
   if (_objUrls.has(url)) return _objUrls.get(url);
   const row = await idbGet(url);
   if (row && row.blob) {
@@ -503,9 +871,9 @@ async function localVideoUrl(url) {
   return url;
 }
 
-// Baixa um vídeo e salva no IndexedDB para uso offline
-async function cacheVideo(url) {
-  if (!url || !isOnline || detectType(url, "auto") !== "video") return;
+// Baixa uma mídia (vídeo OU imagem) e salva no IndexedDB para uso offline
+async function cacheMedia(url) {
+  if (!url || !isOnline) return;
   if (_objUrls.has(url)) return;
   if (await idbGet(url)) return; // já está no IndexedDB
   try {
@@ -515,47 +883,162 @@ async function cacheVideo(url) {
     await idbPut(url, blob);
     _objUrls.set(url, URL.createObjectURL(blob));
   } catch (e) {
-    console.warn("cacheVideo falhou:", url, e);
+    console.warn("cacheMedia falhou:", url, e);
   }
 }
 
-// Baixa em background todos os vídeos ainda não cacheados
-async function cacheAllVideos() {
+// Baixa em background TODAS as mídias (vídeos e imagens) ainda não cacheadas
+async function cacheAllMedia() {
   for (const item of allItems) {
     if (!isOnline) break;
-    if (detectType(item.url, item.type) === "video") await cacheVideo(item.url);
+    const t = detectType(item.url, item.type);
+    if (t === "video" || t === "image") await cacheMedia(item.url);
   }
+}
+
+// Remove do cache (IndexedDB + ObjectURL em memória) o blob de UMA mídia específica.
+async function dropVideoCache(url) {
+  if (!url) return;
+  await idbDelete(url);
+  const obj = _objUrls.get(url);
+  if (obj) { try { URL.revokeObjectURL(obj); } catch (_) {} }
+  _objUrls.delete(url);
+}
+
+// Varre o cache e remove TODO vídeo que não está mais na playlist (allItems).
+// Mantém o sistema limpo após exclusões feitas enquanto o player estava offline.
+// Segurança: nunca limpa nada se allItems estiver vazio (evita apagar tudo num fetch transitório).
+async function pruneOrphanCache() {
+  if (!allItems.length) return;
+  try {
+    const validUrls = new Set(allItems.map(i => i.url));
+    // 1. Blobs órfãos no IndexedDB
+    const keys = await idbAllKeys();
+    for (const key of keys) {
+      if (!validUrls.has(key)) await dropVideoCache(key);
+    }
+    // 2. ObjectURLs órfãos que ainda restem em memória
+    for (const [url, obj] of [..._objUrls]) {
+      if (!validUrls.has(url)) {
+        try { URL.revokeObjectURL(obj); } catch (_) {}
+        _objUrls.delete(url);
+      }
+    }
+  } catch (e) { console.warn("pruneOrphanCache:", e); }
 }
 
 /* =====================================================================
-   REDE — detecta conexão e reage
+   REDE — detecta conexão e reage (offline-first para elevadores)
    ===================================================================== */
 window.addEventListener("online", async () => {
   isOnline = true;
-  toast("Conexão restaurada — sincronizando…");
+  toast("🔗 Conexão restaurada — sincronizando…");
+  // Remove canais antigos antes de reconectar (evita canal "zumbi" após queda)
+  if (sb) {
+    if (rtChannel)    { try { await sb.removeChannel(rtChannel); } catch (_) {} rtChannel = null; }
+    if (settingsRtCh) { try { await sb.removeChannel(settingsRtCh); } catch (_) {} settingsRtCh = null; }
+  }
   await loadAll();
   await loadSettings();
-  cacheAllVideos(); // background
+  loadDevices();   // atualiza a lista de aparelhos (não bloqueia)
+  cacheAllMedia(); // background — baixa vídeos e imagens novos/faltantes
   subscribeRealtime();
   subscribeSettings();
 });
 window.addEventListener("offline", () => {
   isOnline = false;
   setConn(false);
-  toast("Sem conexão — reproduzindo do cache");
+  toast("📵 Sem conexão — reproduzindo do cache local");
 });
+
+/* =====================================================================
+   AUTO-START — controla abertura automática ao ligar o Fire TV
+   ===================================================================== */
+const AUTOSTART_PLUGIN = () =>
+  window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AutoStart
+    ? window.Capacitor.Plugins.AutoStart : null;
+
+// Limpa todo o cache local de mídia (IndexedDB + ObjectURLs em memória).
+// Útil quando vídeos ficam com tela preta por blob corrompido ou stale.
+async function clearMediaCache() {
+  if (!confirm("Limpar cache local?\n\nOs vídeos serão baixados novamente do servidor ao reproduzir.")) return;
+  try {
+    // Revoga todos os ObjectURLs ativos
+    for (const [, objUrl] of _objUrls) {
+      try { URL.revokeObjectURL(objUrl); } catch (_) {}
+    }
+    _objUrls.clear();
+    // Limpa o IndexedDB
+    const db = await openIDB();
+    await new Promise((res) => {
+      const tx = db.transaction("vids", "readwrite");
+      tx.objectStore("vids").clear();
+      tx.oncomplete = res;
+      tx.onerror = res;
+    });
+    toast("🗑 Cache limpo — vídeos serão baixados ao reproduzir");
+    // Se havia vídeo tocando de blob agora inválido, recarrega do CDN
+    if (started && playlist[idx]) playCurrent();
+  } catch (e) {
+    toast("Erro ao limpar cache: " + (e.message || e));
+  }
+}
+
+async function loadAutoStartSetting() {
+  let enabled = true;
+  try {
+    const p = AUTOSTART_PLUGIN();
+    if (p) {
+      const r = await p.isEnabled();
+      enabled = r.enabled !== false;
+    } else {
+      enabled = localStorage.getItem(CACHE_NS + "_autostart") !== "0";
+    }
+  } catch (_) {
+    enabled = localStorage.getItem(CACHE_NS + "_autostart") !== "0";
+  }
+  const toggle = document.getElementById("autoStartToggle");
+  const label  = document.getElementById("autoStartLabel");
+  if (toggle) {
+    toggle.checked = enabled;
+    label.textContent = enabled ? "✅ Ativo" : "⛔ Desativado";
+    label.style.color = enabled ? "var(--green)" : "var(--danger)";
+  }
+}
+
+async function setAutoStart(enabled) {
+  try {
+    const p = AUTOSTART_PLUGIN();
+    if (p) await p.setEnabled({ enabled });
+  } catch (_) {}
+  localStorage.setItem(CACHE_NS + "_autostart", enabled ? "1" : "0");
+  toast(enabled
+    ? "✅ Auto-iniciar ativado — app abre com o Fire TV"
+    : "⛔ Auto-iniciar desativado — use o Fire TV normalmente");
+}
 
 /* =====================================================================
    RELÓGIO + CLIMA
    ===================================================================== */
 function tickClock() {
-  const d  = new Date();
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  const ss = String(d.getSeconds()).padStart(2, "0");
+  const d = new Date(Date.now() + clockOffsetMs);
+  let hh, mm, ss;
+  if (displayTZ) {
+    // Usa o fuso da API de clima p/ exibir a hora certa mesmo se o fuso do
+    // Fire TV estiver mal configurado (ex: UTC em vez de America/Sao_Paulo).
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: displayTZ, hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
+    }).formatToParts(d);
+    const get = (t) => (parts.find((p) => p.type === t) || {}).value || "00";
+    hh = get("hour"); mm = get("minute"); ss = get("second");
+  } else {
+    hh = String(d.getHours()).padStart(2, "0");
+    mm = String(d.getMinutes()).padStart(2, "0");
+    ss = String(d.getSeconds()).padStart(2, "0");
+  }
   $("#iwTime").textContent = hh + ":" + mm;
   $("#iwSec").textContent  = ss;
-  $("#iwDate").textContent = d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+  $("#iwDate").textContent = d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", timeZone: displayTZ || undefined });
 }
 function weatherInfo(code) {
   const map = {
@@ -598,6 +1081,25 @@ async function fetchWeather() {
     $("#iwTemp").textContent = Math.round(j.current.temperature_2m) + "°";
     $("#iwCond").textContent = txt;
     $("#iwMM").textContent   = "Máx " + max + "°  ·  Mín " + min + "°";
+
+    // Corrige o relógio exibido com a hora real (UTC) devolvida pela API —
+    // Fire TV sem RTC/NTP pode ficar com a data/hora do sistema muito atrasada.
+    // Só aplica se o desvio for grande (>20min): a API tem granularidade de ~15min,
+    // então não vale a pena "corrigir" um relógio que já está certo.
+    if (j.current.time && typeof j.utc_offset_seconds === "number") {
+      const realMs = Date.parse(j.current.time + "Z") - j.utc_offset_seconds * 1000;
+      const diff = realMs - Date.now();
+      if (Math.abs(diff) > 20 * 60 * 1000) {
+        clockOffsetMs = diff;
+        try { localStorage.setItem(CACHE_NS + "_clockoffset", String(clockOffsetMs)); } catch (_) {}
+      }
+    }
+    // Guarda o fuso IANA (ex: "America/Sao_Paulo") p/ exibir a hora certa mesmo
+    // se o fuso configurado no Fire TV estiver errado (causa comum de "+3h").
+    if (j.timezone) {
+      displayTZ = j.timezone;
+      try { localStorage.setItem(CACHE_NS + "_tz", displayTZ); } catch (_) {}
+    }
   } catch (_) {}
 }
 
@@ -605,39 +1107,188 @@ async function fetchWeather() {
    PLAYER — reprodução vertical, async com fallback para cache local
    ===================================================================== */
 function rebuildPlaylist() {
+  // Guarda o id do item que está tocando agora
+  const prevId = playlist[idx] ? playlist[idx].id : null;
+
   playlist = allItems
     .filter(i => i.active)
     .sort((a, b) => (a.position - b.position) || (a.created_at < b.created_at ? -1 : 1));
+
   $("#empty").style.display = playlist.length ? "none" : "flex";
-  if (playlist.length && started) {
-    const cur = playlist[idx];
-    if (!cur) { idx = 0; playCurrent(); }
+  if (!playlist.length) { idx = 0; stopMedia(); return; }
+
+  if (started) {
+    const sameIdx = prevId ? playlist.findIndex(i => i.id === prevId) : -1;
+    if (sameIdx >= 0) {
+      idx = sameIdx; // item ainda existe — mantém posição, não interrompe
+    } else {
+      // Item foi excluído ou desativado — pula imediatamente para o próximo
+      idx = Math.min(idx, playlist.length - 1);
+      playCurrent();
+    }
   }
+}
+
+/* =====================================================================
+   ROTAÇÃO GLOBAL DA TELA
+   Gira TUDO (player + overlay + admin) para suportar monitor vertical.
+   0° = landscape (padrão), 90° = portrait direita, 270° = portrait esquerda.
+   Salvo no localStorage — persiste entre reinicializações.
+   ===================================================================== */
+function applyGlobalRotation(deg) {
+  globalRotation = parseInt(deg, 10) || 0;
+  try { localStorage.setItem(CACHE_NS + "_scrrot", globalRotation); } catch (_) {}
+
+  const app = document.getElementById("app");
+  const labels = { 0: "🖥️ Landscape", 90: "📱 Portrait ↻", 180: "🔃 180°", 270: "📱 Portrait ↺" };
+  const btn = document.getElementById("screenRotBtn");
+  if (btn) {
+    btn.textContent = labels[globalRotation] || "🖥️ " + globalRotation + "°";
+    btn.style.background = globalRotation !== 0 ? "rgba(59,130,246,.25)" : "";
+    btn.style.borderColor = globalRotation !== 0 ? "var(--accent)" : "";
+  }
+
+  if (IS_NATIVE) {
+    // Fire TV: a surface de vídeo renderiza na posição de LAYOUT (antes do CSS transform)
+    // e ignora qualquer rotate() no pai — girar o #app desloca a surface para fora da tela.
+    // Solução: nunca rotacionar o #app no nativo; o monitor físico gira via OSD da TV.
+    // Vídeos giram via MP4 bake; imagens e overlay giram via CSS por-item.
+    app.style.cssText = "position:fixed;inset:0";
+    if (globalRotation !== 0) {
+      toast("📺 Fire TV: use o OSD da TV para girar o monitor. Vídeos giram ao enviar (Rotação no upload); imagens giram pelo botão ↻ na playlist.");
+    }
+    if (started) playCurrent();
+    return;
+  }
+
+  // Browser: CSS transform afeta todos os elementos incluindo o vídeo — funciona normal.
+  if (globalRotation === 0) {
+    app.style.cssText = "position:fixed;inset:0";
+  } else if (globalRotation === 180) {
+    app.style.cssText = "position:fixed;inset:0;transform:rotate(180deg);transform-origin:center center";
+  } else {
+    // 90° ou 270°: inverte dimensões para preencher o monitor portrait sem bordas pretas
+    app.style.cssText =
+      "position:fixed;inset:auto;" +
+      "width:100vh;height:100vw;" +
+      "left:50%;top:50%;" +
+      "transform-origin:center center;" +
+      "transform:translate(-50%,-50%) rotate(" + globalRotation + "deg)";
+  }
+  if (started) playCurrent();
+}
+
+// Revela o <video> (ver o "hidden" em playCurrent). Idempotente de propósito:
+// é chamada por loadeddata, por playing e por um timeout de segurança — o que
+// vier primeiro. Nenhum caminho pode deixar o vídeo invisível.
+function revelarVideo() {
+  clearTimeout(vid._revealTimer);
+  vid._revealTimer = null;
+  vid.style.visibility = "visible";
 }
 
 async function playCurrent() {
   clearTimeout(imgTimer);
+  clearTimeout(vid._loadTimeout);
+  vid._loadTimeout = null;
   if (!playlist.length) { stopMedia(); return; }
   if (idx >= playlist.length) idx = 0;
   const item = playlist[idx];
   const type = detectType(item.url, item.type);
 
+  // Persiste o item atual — permite retomar de onde parou após reinício/queda de energia
+  try { localStorage.setItem(CACHE_NS + "_lastid", String(item.id)); } catch (_) {}
+
+  // Usa sempre a rotação individual do item (a rotação global já cuida da orientação da tela)
+  const rot = item.rotation || 0;
+
+  syncOverlayRotation(rot);
+
   if (type === "image") {
     vid.pause(); vid.style.display = "none"; vid.removeAttribute("src");
-    imgEl.src = item.url; imgEl.style.display = "block";
+    applyMediaRotation(vid, 0);
+    // Prefere imagem do cache (IndexedDB); volta ao CDN se o blob falhar
+    const imgSrc = await localMediaUrl(item.url);
+    imgEl.onerror = () => {
+      if (imgEl.src !== item.url) imgEl.src = item.url; // blob inválido → CDN
+    };
+    imgEl.src = imgSrc; imgEl.style.display = "block";
+    applyMediaRotation(imgEl, rot);
     imgTimer = setTimeout(next, Math.max(2, parseInt(item.duration || 10, 10)) * 1000);
   } else {
     imgEl.style.display = "none"; imgEl.removeAttribute("src");
+    applyMediaRotation(imgEl, 0);
     vid.style.display = "block";
+    // Mudo por padrão; só ativa som se o item tiver has_sound = true
+    vid.muted = !(item.has_sound === true);
+    applyMediaRotation(vid, rot);
     // Prefere URL local (blob do IndexedDB), volta para CDN se não tiver cache
-    const src = await localVideoUrl(item.url);
-    if (vid.src !== src) vid.src = src;
+    const src = await localMediaUrl(item.url);
+
+    // Atualiza src apenas se mudou ou se houve erro anterior; se o mesmo vídeo
+    // terminou e vai repetir, reseta currentTime para reiniciar do começo.
+    if (vid.src !== src || vid.error) {
+      // Trocar o src RESETA o elemento (volta a paused, sem quadro) e o play()
+      // é assíncrono. Nessa janela o WebView do Android desenha o próprio botão
+      // de "play" por cima do <video> — some quando o vídeo entra, mas aparece
+      // na troca. Esconde até o 1º quadro existir; o #player preto cobre.
+      vid.style.visibility = "hidden";
+      // `loadeddata` = primeiro quadro disponível: a partir daí não há mais
+      // placeholder para o WebView desenhar. Não uso só `playing` porque ele
+      // pode nunca disparar (autoplay bloqueado, blob ruim) e o vídeo ficaria
+      // invisível para sempre — tela preta, pior que o placeholder.
+      vid.addEventListener("loadeddata", revelarVideo, { once: true });
+      // Rede de segurança dura: aconteça o que acontecer, volta a aparecer.
+      clearTimeout(vid._revealTimer);
+      vid._revealTimer = setTimeout(revelarVideo, 1500);
+      vid.src = src;
+    } else {
+      // Mesma fonte (repetindo): já há quadro. Garante visível — sem isto, um
+      // "hidden" deixado por uma tentativa anterior travaria a tela preta.
+      revelarVideo();
+      if (vid.ended) vid.currentTime = 0;
+    }
+
+    // Timeout de segurança: se o vídeo não começar a tocar em 10 s, tenta CDN diretamente.
+    // Protege contra blob inválido/corrompido e rede lenta sem disparar o evento error.
+    vid._loadTimeout = setTimeout(async () => {
+      if (vid.readyState < 2 && playlist[idx] && playlist[idx].url === item.url) {
+        console.warn("[timeout] vídeo não carregou:", item.url);
+        if (src !== item.url && isOnline) {
+          // blob falhou e há rede → limpa cache corrompido e tenta direto do CDN
+          await idbDelete(item.url);
+          _objUrls.delete(item.url);
+          vid.src = item.url;
+          vid.play().catch(() => setTimeout(next, 1000));
+        } else {
+          // Offline: NÃO apaga o cache (o blob pode só estar lento neste
+          // hardware) — apagar deixaria o vídeo com tela preta para sempre,
+          // pois o CDN é inacessível sem rede. Pula e tenta de novo no próximo ciclo.
+          setTimeout(next, 1000);
+        }
+      }
+    }, 10000);
+
+    // Cancela o timeout assim que o vídeo começar a reproduzir
+    vid.addEventListener("playing", function _onPlaying() {
+      revelarVideo();
+      clearTimeout(vid._loadTimeout);
+      vid._loadTimeout = null;
+      vid.removeEventListener("playing", _onPlaying);
+    });
+
     vid.play().catch(async () => {
-      // Se a URL local falhou (ObjectURL inválido), tenta a URL original do CDN
-      if (src !== item.url) {
+      clearTimeout(vid._loadTimeout);
+      vid._loadTimeout = null;
+      // Se a URL local falhou (ObjectURL inválido) e há rede, tenta a URL original do CDN
+      if (src !== item.url && isOnline) {
+        await idbDelete(item.url);
+        _objUrls.delete(item.url);
         vid.src = item.url;
         vid.play().catch(() => setTimeout(next, 800));
       } else {
+        // Offline: não apaga o cache local — apagar deixaria tela preta
+        // permanente (sem rede p/ rebaixar). Pula e tenta de novo depois.
         setTimeout(next, 800);
       }
     });
@@ -655,18 +1306,252 @@ function stopMedia() {
   vid.removeAttribute("src");
   imgEl.removeAttribute("src");
   clearTimeout(imgTimer);
+  clearTimeout(vid._loadTimeout);
+  vid._loadTimeout = null;
+  clearTimeout(vid._revealTimer);
+  vid._revealTimer = null;
 }
 
-vid.addEventListener("ended", next);
+/* Gira o container #overlay (widget + letreiro) junto com a mídia atual.
+   Usa a mesma técnica do vídeo: troca 100vh×100vw para 90°/270°. */
+function syncOverlayRotation(rotation) {
+  const ov = document.getElementById("overlay");
+  if (!ov) return;
+  const deg = parseInt(rotation || 0, 10);
+
+  // Reset
+  ov.style.position        = "";
+  ov.style.width           = "";
+  ov.style.height          = "";
+  ov.style.left            = "";
+  ov.style.top             = "";
+  ov.style.bottom          = "";
+  ov.style.right           = "";
+  ov.style.transform       = "";
+  ov.style.transformOrigin = "";
+
+  if (!deg) return;
+  if (deg === 180) { ov.style.transform = "rotate(180deg)"; return; }
+
+  // 90° ou 270°: troca dimensões usando o tamanho real do #app (px) — compõe com a rotação global
+  const host = ov.parentElement;
+  const pw = host ? host.clientWidth  : window.innerWidth;
+  const ph = host ? host.clientHeight : window.innerHeight;
+  ov.style.position        = "absolute";
+  ov.style.width           = ph + "px";
+  ov.style.height          = pw + "px";
+  ov.style.left            = "50%";
+  ov.style.top             = "50%";
+  ov.style.bottom          = "auto";
+  ov.style.right           = "auto";
+  ov.style.transformOrigin = "center center";
+  ov.style.transform       = `translate(-50%, -50%) rotate(${deg}deg)`;
+}
+
+/* Aplica rotação CSS ao elemento de mídia.
+   Para 90°/270°: troca width/height usando o tamanho REAL do #player em pixels
+   (não viewport), para compor corretamente com a rotação GLOBAL da tela.
+   Assim funciona tanto em monitor deitado quanto em monitor vertical. */
+function applyMediaRotation(el, rotation) {
+  const deg = parseInt(rotation || 0, 10);
+  // Reset inline styles
+  el.style.position = "";
+  el.style.width    = "";
+  el.style.height   = "";
+  el.style.left     = "";
+  el.style.top      = "";
+  el.style.transform = "";
+  el.style.transformOrigin = "";
+
+  if (!deg) return;
+
+  // Vídeo no Fire TV (nativo): a surface de hardware ignora CSS transform no elemento OU
+  // em qualquer pai — 90° desalinha, 180° deixa PRETO. Rotação gravada no arquivo MP4 (bake).
+  // No browser: CSS transform funciona normalmente em vídeos.
+  if (el.tagName === "VIDEO" && IS_NATIVE) return;
+
+  if (deg === 180) {
+    el.style.transform = "rotate(180deg)";
+    return;
+  }
+  // 90° ou 270°: troca as dimensões do elemento relativas ao container (#player).
+  // Mede em pixels reais → respeita a rotação global (#app pode estar girado p/ monitor vertical).
+  const host = el.parentElement;
+  const pw = host ? host.clientWidth  : window.innerWidth;
+  const ph = host ? host.clientHeight : window.innerHeight;
+  el.style.position        = "absolute";
+  el.style.width           = ph + "px";
+  el.style.height          = pw + "px";
+  el.style.left            = "50%";
+  el.style.top             = "50%";
+  el.style.transformOrigin = "center center";
+  el.style.transform       = `translate(-50%, -50%) rotate(${deg}deg)`;
+}
+
+// Ao terminar, o vídeo fica PAUSADO no último quadro — e é aí que o WebView
+// do Android desenha o botão de "play" por cima dele. O next() é assíncrono
+// (lê o blob do IndexedDB antes de trocar a fonte), então essa janela é bem
+// visível. Esconde ANTES de qualquer await; playCurrent revela no 1º quadro.
+vid.addEventListener("ended", () => { vid.style.visibility = "hidden"; next(); });
 vid.addEventListener("error", () => { console.warn("Erro no vídeo, pulando…"); setTimeout(next, 800); });
 
-async function startPlayback(withSound) {
+async function startPlayback() {
   started = true;
   $("#tapStart").style.display = "none";
-  if (withSound) vid.muted = false;
+  // O mudo é controlado por vídeo em playCurrent() via item.has_sound
   rebuildPlaylist();
   idx = 0;
   await playCurrent();
+}
+
+/* =====================================================================
+   APARELHOS (Elevador 1, Elevador 2, Totem 1…)
+   Cada aparelho tem playlist e avisos próprios. O aparelho fica salvo
+   no localStorage — escolhido uma vez, na primeira abertura.
+   ===================================================================== */
+const DEV_ICON = { elevador: "🛗", totem: "📺", outro: "📱" };
+const devIcon  = (k) => DEV_ICON[k] || DEV_ICON.outro;
+
+// O Elevador 1 mora nas tabelas legadas (`videos`/`settings`) porque o APK
+// antigo dele — que NÃO será atualizado — lê exatamente essas duas e não
+// filtra por aparelho. Todo aparelho novo mora em `device_videos`/
+// `device_settings`, que aquele APK sequer conhece. É isto que garante que
+// um vídeo de totem nunca apareça no elevador em produção.
+const isLegacyDevice = () => deviceId === CONFIG.DEFAULT_DEVICE_ID;
+const tblVideos      = () => isLegacyDevice() ? CONFIG.TABLE : CONFIG.DEVICE_TABLE;
+const tblSettings    = () => isLegacyDevice() ? CONFIG.SETTINGS_TABLE : CONFIG.DEVICE_SETTINGS_TABLE;
+
+// Instalação anterior ao multi-aparelho: aproveita o cache que já existe
+// no Fire TV para o Elevador 1 continuar tocando offline após a atualização.
+function migrateLegacyCache() {
+  try {
+    if (localStorage.getItem(CACHE_NS + "_devid")) return;
+    const oldPl = localStorage.getItem(CACHE_NS + "_pl");
+    if (oldPl && !localStorage.getItem(CACHE_NS + "_pl_" + CONFIG.DEFAULT_DEVICE_ID))
+      localStorage.setItem(CACHE_NS + "_pl_" + CONFIG.DEFAULT_DEVICE_ID, oldPl);
+    const oldCfg = localStorage.getItem(CACHE_NS + "_cfg");
+    if (oldCfg && !localStorage.getItem(CACHE_NS + "_cfg_" + CONFIG.DEFAULT_DEVICE_ID))
+      localStorage.setItem(CACHE_NS + "_cfg_" + CONFIG.DEFAULT_DEVICE_ID, oldCfg);
+  } catch (_) {}
+}
+
+async function loadDevices() {
+  if (!sb || !isOnline) {
+    devices = loadDevicesCache();
+  } else {
+    const { data, error } = await sb.from(CONFIG.DEVICES_TABLE).select("*").order("name", { ascending: true });
+    if (error) { console.warn("devices:", error.message); devices = loadDevicesCache(); }
+    else { devices = data || []; saveDevicesCache(devices); }
+  }
+  // Sem lista (offline e sem cache): pelo menos o aparelho padrão
+  if (!devices.length)
+    devices = [{ id: CONFIG.DEFAULT_DEVICE_ID, name: "Elevador 1", kind: "elevador" }];
+  renderDeviceUI();
+  return devices;
+}
+
+function currentDevice() { return devices.find(d => d.id === deviceId) || null; }
+
+function renderDeviceUI() {
+  const d = currentDevice();
+  if (d) deviceName = d.name;
+  const lbl = $("#devNameLbl");
+  if (lbl) lbl.textContent = deviceName ? devIcon(d && d.kind) + " " + deviceName : "—";
+  const sel = $("#devSelect");
+  if (sel) {
+    sel.innerHTML = devices
+      .map(x => '<option value="' + escapeHtml(x.id) + '"' + (x.id === deviceId ? " selected" : "") + ">" +
+                devIcon(x.kind) + " " + escapeHtml(x.name) + "</option>")
+      .join("");
+    sel.value = deviceId || CONFIG.DEFAULT_DEVICE_ID;
+  }
+  // O título do card de playlist mostra de quem é a lista
+  const pt = $("#playlistDevLbl");
+  if (pt) pt.textContent = deviceName ? "— " + deviceName : "";
+}
+
+// Troca o aparelho DESTE app: playlist, avisos, cache e Realtime seguem junto.
+async function switchDevice(id) {
+  if (!id || id === deviceId) return;
+  deviceId   = id;
+  const d    = devices.find(x => x.id === id);
+  deviceName = d ? d.name : "";
+  try {
+    localStorage.setItem(CACHE_NS + "_devid", deviceId);
+    localStorage.setItem(CACHE_NS + "_devname", deviceName);
+  } catch (_) {}
+
+  // Estado do aparelho anterior sai de cena antes de qualquer rede
+  stopMedia();
+  idx = 0;
+  allItems = loadPlaylistCache();
+  const cached = loadSettingsCache();
+  settings = cached ? { ...SETTINGS_DEFAULTS, ...cached } : { ...SETTINGS_DEFAULTS };
+  rebuildPlaylist(); renderList(); renderMarquee(); populateSettingsInputs(); renderDeviceUI();
+
+  // Realtime do aparelho antigo é descartado — cada aparelho tem seu canal
+  if (sb) {
+    if (rtChannel)    { try { await sb.removeChannel(rtChannel); } catch (_) {} rtChannel = null; }
+    if (settingsRtCh) { try { await sb.removeChannel(settingsRtCh); } catch (_) {} settingsRtCh = null; }
+  }
+  if (isOnline && sb) {
+    await loadAll();
+    await loadSettings();
+    cacheAllMedia();          // background — baixa as mídias deste aparelho
+    subscribeRealtime();
+    subscribeSettings();
+  }
+  if (playlist.length) { idx = 0; await playCurrent(); }
+  toast("Aparelho: " + (deviceName || "—"));
+}
+
+async function createDevice() {
+  if (!sb || !isOnline) { toast("Sem conexão — cadastre o aparelho quando estiver online"); return; }
+  const input = $("#devNewName");
+  const name  = (input.value || "").trim();
+  if (!name) { toast("Digite o nome do aparelho"); return; }
+  if (devices.some(x => x.name.toLowerCase() === name.toLowerCase())) {
+    toast("Já existe um aparelho com esse nome"); return;
+  }
+  const kind = $("#devNewKind").value;
+  const { data, error } = await sb.from(CONFIG.DEVICES_TABLE).insert({ name, kind }).select().single();
+  if (error) { toast("Erro: " + error.message); return; }
+  devices.push(data);
+  devices.sort((a, b) => a.name.localeCompare(b.name));
+  saveDevicesCache(devices);
+  input.value = "";
+  renderDeviceUI();
+  renderDevicePicker();
+  toast('Aparelho "' + name + '" criado ✓ — selecione para montar a playlist dele');
+}
+
+/* ---- Tela de escolha do aparelho (só na primeira abertura) ---- */
+function renderDevicePicker() {
+  const box = $("#devPickList");
+  if (!box) return;
+  box.innerHTML = "";
+  devices.forEach(d => {
+    const b = document.createElement("button");
+    b.className = "devpick-btn";
+    b.innerHTML = '<span class="devpick-ico">' + devIcon(d.kind) + "</span>" + escapeHtml(d.name);
+    b.onclick = () => {
+      deviceId   = d.id;
+      deviceName = d.name;
+      try {
+        localStorage.setItem(CACHE_NS + "_devid", deviceId);
+        localStorage.setItem(CACHE_NS + "_devname", deviceName);
+      } catch (_) {}
+      $("#devPick").style.display = "none";
+      if (_devPickResolve) { _devPickResolve(d.id); _devPickResolve = null; }
+    };
+    box.appendChild(b);
+  });
+}
+let _devPickResolve = null;
+function askDevice() {
+  renderDevicePicker();
+  $("#devPick").style.display = "flex";
+  return new Promise((res) => { _devPickResolve = res; });
 }
 
 /* =====================================================================
@@ -679,7 +1564,11 @@ async function loadAll() {
     rebuildPlaylist(); renderList();
     return;
   }
-  const { data, error } = await sb.from(CONFIG.TABLE).select("*").order("position", { ascending: true });
+  // Só as mídias DESTE aparelho — cada Elevador/Totem tem a sua playlist
+  const { data, error } = await sb.from(tblVideos())
+    .select("*")
+    .eq("device_id", deviceId)
+    .order("position", { ascending: true });
   if (error) {
     console.error(error);
     allItems = loadPlaylistCache(); // fallback para cache
@@ -689,14 +1578,21 @@ async function loadAll() {
   allItems = data || [];
   savePlaylistCache(allItems); // atualiza cache local
   rebuildPlaylist(); renderList();
+  pruneOrphanCache(); // background: remove blobs de vídeos já excluídos do servidor
   if (started && playlist.length && vid.paused && imgEl.style.display === "none") playCurrent();
 }
 
-// Realtime somente para INSERT — detecta vídeo novo e baixa para offline
+// Realtime completo — INSERT (novo), DELETE (removido) e UPDATE (alterado).
+// Mantém a playlist e o cache offline sincronizados ao vivo, sem esperar reconexão.
 function subscribeRealtime() {
   if (!sb || rtChannel) return;
-  rtChannel = sb.channel("videos-rt")
-    .on("postgres_changes", { event: "INSERT", schema: "public", table: CONFIG.TABLE },
+  // Filtro no servidor: este aparelho só recebe eventos das SUAS mídias.
+  // (DELETE não pode ser filtrado — o payload `old` só traz a PK — então
+  //  ele é filtrado no cliente logo abaixo.)
+  const devFilter = "device_id=eq." + deviceId;
+  rtChannel = sb.channel("videos-rt-" + deviceId)
+    // ── INSERT: nova mídia entra na playlist e é baixada para offline ──
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: tblVideos(), filter: devFilter },
       async (p) => {
         const n = p.new;
         if (allItems.find(i => i.id === n.id)) return; // duplicata
@@ -704,12 +1600,34 @@ function subscribeRealtime() {
         savePlaylistCache(allItems);
         rebuildPlaylist(); renderList();
         if (started && playlist.length && vid.paused && imgEl.style.display === "none") playCurrent();
-        // Baixa o novo vídeo para uso offline em background
-        if (detectType(n.url, n.type) === "video" && isOnline) {
-          toast("Novo vídeo detectado — baixando para offline…");
-          await cacheVideo(n.url);
-          toast('"' + (n.title || "Novo vídeo") + '" disponível offline ✓');
+        const nt = detectType(n.url, n.type);
+        if ((nt === "video" || nt === "image") && isOnline) {
+          toast("Nova mídia detectada — baixando para offline…");
+          await cacheMedia(n.url);
+          toast('"' + (n.title || "Nova mídia") + '" disponível offline ✓');
         }
+      })
+    // ── DELETE: remove da playlist e apaga o blob do cache imediatamente ──
+    .on("postgres_changes", { event: "DELETE", schema: "public", table: tblVideos() },
+      async (p) => {
+        const oldId = p.old && p.old.id;
+        if (oldId == null) return;
+        const removed = allItems.find(i => i.id === oldId);
+        if (!removed) return; // mídia de outro aparelho — ignora
+        allItems = allItems.filter(i => i.id !== oldId);
+        savePlaylistCache(allItems);
+        rebuildPlaylist(); renderList(); // se for o item no ar, pula na hora
+        if (removed && removed.url) await dropVideoCache(removed.url);
+        toast("🗑 Vídeo removido — cache local limpo");
+      })
+    // ── UPDATE: aplica alterações (ativo/pausado, rotação, som, ordem) ──
+    .on("postgres_changes", { event: "UPDATE", schema: "public", table: tblVideos(), filter: devFilter },
+      (p) => {
+        const u = p.new;
+        const i = allItems.findIndex(x => x.id === u.id);
+        if (i >= 0) allItems[i] = u; else allItems.push(u);
+        savePlaylistCache(allItems);
+        rebuildPlaylist(); renderList();
       })
     .subscribe((status) => {
       const ok = status === "SUBSCRIBED";
@@ -718,38 +1636,195 @@ function subscribeRealtime() {
     });
 }
 
+// Gira o item 90° no sentido horário (cicla 0→90→180→270→0)
+async function rotateItem(item) {
+  if (!sb) { toast("Sem conexão"); return; }
+  // Vídeo no Fire TV (nativo): não gira por CSS (surface de hardware ignora transform).
+  // Rotação tem que ser gravada no arquivo MP4 — reenvie escolhendo a Rotação no upload.
+  // No browser: CSS transform funciona; permite girar normalmente.
+  if (detectType(item.url, item.type) === "video" && IS_NATIVE) {
+    toast("🎬 Vídeo gira só no upload (grava no arquivo). Reenvie escolhendo a Rotação.");
+    return;
+  }
+  const newRot = ((item.rotation || 0) + 90) % 360;
+  const { error } = await sb.from(tblVideos()).update({ rotation: newRot }).eq("id", item.id);
+  if (error) { toast("Erro: " + error.message); return; }
+
+  // Aplica a rotação visualmente de imediato se este item estiver em exibição
+  const playing = playlist[idx];
+  if (playing && playing.id === item.id) {
+    playing.rotation = newRot; // atualiza estado local sem reiniciar
+    const type = detectType(item.url, item.type);
+    syncOverlayRotation(newRot);
+    applyMediaRotation(type === "image" ? imgEl : vid, newRot);
+  }
+
+  loadAll(); // sincroniza lista e cache em background
+}
+
+// Alterna mudo ↔ com som para um vídeo específico.
+// Por padrão (has_sound = false) TODOS os vídeos ficam mudos.
+// Apenas o(s) vídeo(s) marcados com has_sound = true tocam com som.
+async function toggleSound(item) {
+  if (!sb) { toast("Sem conexão"); return; }
+  const { error } = await sb.from(tblVideos()).update({ has_sound: !item.has_sound }).eq("id", item.id);
+  if (error) toast("Erro: " + error.message);
+  else {
+    toast(item.has_sound ? "🔇 Vídeo mutado" : "🔊 Som ativado — demais vídeos permanecem mudos");
+    loadAll();
+  }
+}
+
 async function addOrUpdate() {
   if (!sb) { toast("Sem conexão com Supabase"); return; }
-  const url      = $("#fUrl").value.trim();
+  let url        = $("#fUrl").value.trim();
   const title    = $("#fTitle").value.trim() || "Sem título";
   const type     = $("#fType").value;
   const duration = parseInt($("#fDur").value || "10", 10);
+  let rotation   = parseInt($("#fRotation").value || "0", 10);
+
+  // Há um arquivo escolhido e ainda não enviado? Processa (gira o vídeo) e envia agora.
+  if (pendingFile && !editingId) {
+    let blob = pendingFile;
+    if (detectType(pendingFile.name, type) === "video" && [90, 180, 270].includes(rotation)) {
+      try {
+        setUploadNote("info", "Girando o vídeo sem perda…");
+        blob = await rotateMp4Blob(pendingFile, rotation);
+      } catch (err) {
+        console.warn("rotateMp4Blob:", err);
+        setUploadNote("warn", "Não consegui girar este arquivo sem perda (" + err.message +
+          ") — enviando o original sem rotação.");
+      }
+      rotation = 0; // vídeo: a rotação vai gravada no arquivo (ou nenhuma) — nunca CSS no Fire TV
+    }
+    const got = await uploadToR2(blob, pendingFile.name);
+    if (!got) { toast("Falha no upload — nada foi adicionado à playlist"); return; }
+    url = got;
+    pendingFile = null;
+  }
+
   if (!url) { toast("Informe a URL ou envie um arquivo"); return; }
   const realType = detectType(url, type);
-  const payload  = { title, url, type: realType, duration: realType === "image" ? duration : null, active: true };
+  // Fire TV (nativo): vídeo não gira por CSS — sem arquivo novo não dá pra gravar a rotação
+  // no arquivo MP4, então força rotation=0 (evita player preto/desalinhado).
+  // Browser: CSS transform funciona; permite qualquer rotação.
+  if (IS_NATIVE && realType === "video" && rotation !== 0) {
+    toast("🎬 Para girar vídeo no Fire TV, reenvie o arquivo escolhendo a Rotação.");
+    rotation = 0;
+  }
+  // device_id: a mídia entra na playlist do aparelho selecionado no Admin
+  const payload  = { title, url, type: realType, duration: realType === "image" ? duration : null, active: true, rotation, device_id: deviceId };
   if (editingId) {
-    const { error } = await sb.from(CONFIG.TABLE).update(payload).eq("id", editingId);
+    const { error } = await sb.from(tblVideos()).update(payload).eq("id", editingId);
     if (error) { toast("Erro: " + error.message); return; }
     toast("Mídia atualizada"); cancelEdit();
   } else {
     const maxPos = allItems.reduce((m, i) => Math.max(m, i.position || 0), 0);
     payload.position = maxPos + 1;
-    const { error } = await sb.from(CONFIG.TABLE).insert(payload);
+    const { error } = await sb.from(tblVideos()).insert(payload);
     if (error) { toast("Erro: " + error.message); return; }
     toast("Mídia adicionada ✓");
   }
   clearForm(); loadAll();
 }
+// Conta em quantas OUTRAS linhas (de qualquer aparelho) a mesma URL é usada.
+// Excluir o arquivo do R2 quebra todas elas — daí o aviso antes de apagar.
+// Retorna null se não deu para consultar (offline): aí o diálogo avisa a dúvida.
+async function urlEmUsoPorOutros(url, ignoreId) {
+  if (!sb || !isOnline || !url) return null;
+  try {
+    const [a, b] = await Promise.all([
+      sb.from(CONFIG.TABLE).select("id,title,device_id").eq("url", url),
+      sb.from(CONFIG.DEVICE_TABLE).select("id,title,device_id").eq("url", url),
+    ]);
+    if (a.error || b.error) return null;
+    const nomes = { [CONFIG.DEFAULT_DEVICE_ID]: "Elevador 1" };
+    devices.forEach(d => { nomes[d.id] = d.name; });
+    return [...(a.data || []), ...(b.data || [])]
+      .filter(r => String(r.id) !== String(ignoreId))
+      .map(r => nomes[r.device_id] || "outro aparelho");
+  } catch (_) { return null; }
+}
+
+// Diálogo de remoção. Resolve "keep" (só playlist), "purge" (playlist + arquivo)
+// ou null (cancelou). Existe porque o confirm() antigo era binário: um único OK
+// apagava o arquivo do R2 — e com vários aparelhos isso quebrava a playlist dos
+// outros que usam o mesmo arquivo (foi o que gerou os 404 do Totem 1).
+function askRemocao({ titulo, ours, usadoPor }) {
+  return new Promise((resolve) => {
+    const box   = $("#ask");
+    const purge = $("#askPurge");
+    const warn  = $("#askWarn");
+
+    $("#askTitle").textContent = "Remover “" + (titulo || "mídia") + "”";
+    $("#askSub").textContent = ours
+      ? "Este arquivo está hospedado no nosso servidor (R2). Escolha o que fazer:"
+      : "Esta mídia usa um link externo — o arquivo não é nosso, então só dá para tirá-la da playlist.";
+
+    // Arquivo de terceiro: não há o que excluir no nosso servidor
+    purge.style.display = ours ? "" : "none";
+    purge.disabled = false;
+    warn.style.display = "none";
+
+    if (ours && usadoPor === null) {
+      warn.style.display = "";
+      warn.innerHTML = "⚠️ Sem conexão para verificar se outro aparelho usa este mesmo arquivo. " +
+                       "Se usar, excluir vai quebrar a playlist dele.";
+    } else if (ours && usadoPor && usadoPor.length) {
+      warn.style.display = "";
+      warn.innerHTML = "⛔ Este mesmo arquivo está em uso por: <b>" +
+        escapeHtml([...new Set(usadoPor)].join(", ")) +
+        "</b>.<br>Excluir do servidor deixaria a playlist desse(s) aparelho(s) com erro. " +
+        "Use “Remover só da playlist”.";
+      purge.disabled = true; // protege o outro aparelho
+    }
+
+    const fim = (r) => {
+      box.classList.remove("open");
+      $("#askKeep").onclick = $("#askPurge").onclick = $("#askCancel").onclick = null;
+      document.removeEventListener("keydown", onEsc, true);
+      resolve(r);
+    };
+    const onEsc = (e) => { if (e.key === "Escape") { e.stopPropagation(); fim(null); } };
+
+    $("#askKeep").onclick   = () => fim("keep");
+    $("#askPurge").onclick  = () => fim(purge.disabled ? null : "purge");
+    $("#askCancel").onclick = () => fim(null);
+    document.addEventListener("keydown", onEsc, true);
+
+    box.classList.add("open");
+    $("#askKeep").focus();
+  });
+}
+
 async function del(id) {
   if (!sb) return;
-  if (!confirm("Remover esta mídia da playlist?")) return;
-  const { error } = await sb.from(CONFIG.TABLE).delete().eq("id", id);
+  const item = allItems.find(i => i.id === id);
+  if (!item) return;
+  const ours = isOurR2Url(item.url);
+
+  const usadoPor = ours ? await urlEmUsoPorOutros(item.url, id) : [];
+  const escolha  = await askRemocao({ titulo: item.title, ours, usadoPor });
+  if (!escolha) return;
+
+  const { error } = await sb.from(tblVideos()).delete().eq("id", id);
   if (error) { toast("Erro: " + error.message); return; }
-  toast("Removida"); loadAll();
+
+  // O cache local sai sempre (a mídia não toca mais NESTE aparelho); o arquivo
+  // do servidor só é apagado se foi pedido explicitamente.
+  if (item.url) {
+    await dropVideoCache(item.url);
+    if (escolha === "purge") await deleteFromR2(item.url);
+  }
+  toast(escolha === "purge"
+    ? "Removida da playlist e excluída do servidor"
+    : "Removida da playlist — arquivo mantido em 📤 Enviados");
+  loadAll();
+  if ($("#admin").classList.contains("open")) loadR2Library();
 }
 async function toggleActive(item) {
   if (!sb) return;
-  const { error } = await sb.from(CONFIG.TABLE).update({ active: !item.active }).eq("id", item.id);
+  const { error } = await sb.from(tblVideos()).update({ active: !item.active }).eq("id", item.id);
   if (error) toast("Erro: " + error.message);
   else loadAll();
 }
@@ -759,118 +1834,506 @@ async function move(item, dir) {
   const i = sorted.findIndex(x => x.id === item.id), j = i + dir;
   if (j < 0 || j >= sorted.length) return;
   const a = sorted[i], b = sorted[j];
-  await sb.from(CONFIG.TABLE).update({ position: b.position }).eq("id", a.id);
-  await sb.from(CONFIG.TABLE).update({ position: a.position }).eq("id", b.id);
+  await sb.from(tblVideos()).update({ position: b.position }).eq("id", a.id);
+  await sb.from(tblVideos()).update({ position: a.position }).eq("id", b.id);
   loadAll();
 }
 
 /* =====================================================================
    UPLOAD R2 (via Worker)
    ===================================================================== */
-function setupUpload() {
+function setUploadNote(type, html) {
   const note = $("#uploadNote");
+  const colors = { ok: "var(--green)", err: "var(--danger)", warn: "var(--warn)", info: "var(--muted)" };
+  const testLink = ' <a href="#" onclick="testWorker();return false" style="color:var(--accent-2);font-size:11px;margin-left:6px">testar worker ▸</a>';
+  note.innerHTML = '<span style="color:' + (colors[type] || colors.info) + '">' + html + '</span>' + (type !== "ok" ? testLink : "");
+}
+
+// Arquivo escolhido no seletor — só é enviado (e rotacionado) ao clicar em "Adicionar".
+let pendingFile = null;
+
+/* =====================================================================
+   ROTAÇÃO LOSSLESS DE VÍDEO (no upload)
+   Reescreve a matriz de transformação da faixa de vídeo no container MP4/MOV
+   (box tkhd). NÃO re-encoda → zero perda. O hardware do Fire TV RESPEITA essa
+   matriz (testado no aparelho via CDP), ao contrário do transform CSS, que a
+   surface de vídeo ignora. addDeg é somado à rotação já existente no arquivo.
+   ===================================================================== */
+async function rotateMp4Blob(file, addDeg) {
+  const u8 = new Uint8Array(await file.arrayBuffer());
+  const dv = new DataView(u8.buffer);
+  const TY = (s) => (s.charCodeAt(0) << 24) | (s.charCodeAt(1) << 16) | (s.charCodeAt(2) << 8) | s.charCodeAt(3);
+  const MOOV = TY("moov"), TRAK = TY("trak"), TKHD = TY("tkhd"), MDIA = TY("mdia"), HDLR = TY("hdlr"), VIDE = TY("vide");
+
+  function header(pos, end) {
+    if (pos + 8 > end) return null;
+    let size = dv.getUint32(pos); const type = dv.getUint32(pos + 4); let hs = 8;
+    if (size === 1) { size = dv.getUint32(pos + 8) * 4294967296 + dv.getUint32(pos + 12); hs = 16; }
+    else if (size === 0) { size = end - pos; }
+    if (size < hs) return null;
+    return { type, payloadStart: pos + hs, end: pos + size };
+  }
+  function* kids(start, end) {
+    let pos = start;
+    while (pos + 8 <= end) { const h = header(pos, end); if (!h || h.end > end || h.end <= pos) break; yield h; pos = h.end; }
+  }
+  function find(start, end, type) { for (const h of kids(start, end)) if (h.type === type) return h; return null; }
+  function isVideoTrak(s, e) {
+    const m = find(s, e, MDIA); if (!m) return false;
+    const h = find(m.payloadStart, m.end, HDLR); if (!h) return false;
+    return dv.getUint32(h.payloadStart + 8) === VIDE; // handler_type === 'vide'
+  }
+  // matriz começa em 40 (tkhd v0) ou 52 (v1); ordem a,b,u,c,d,v,x,y,w
+  function matrixOff(tkhdStart) { return tkhdStart + (dv.getUint8(tkhdStart) === 1 ? 52 : 40); }
+  function curDeg(mo) {
+    const a = dv.getInt32(mo) / 65536, b = dv.getInt32(mo + 4) / 65536;
+    const d = ((Math.round(Math.atan2(b, a) * 180 / Math.PI) % 360) + 360) % 360;
+    return (Math.round(d / 90) * 90) % 360;
+  }
+  function writeMatrix(mo, deg) {
+    const rawW = dv.getUint32(mo + 36), rawH = dv.getUint32(mo + 40), F = 65536, N = -65536;
+    let a = F, b = 0, c = 0, d = F, x = 0, y = 0;
+    if (deg === 90)       { a = 0; b = F; c = N; d = 0; x = rawH; y = 0; }
+    else if (deg === 180) { a = N; b = 0; c = 0; d = N; x = rawW; y = rawH; }
+    else if (deg === 270) { a = 0; b = N; c = F; d = 0; x = 0;    y = rawW; }
+    dv.setInt32(mo, a);      dv.setInt32(mo + 4, b);   dv.setInt32(mo + 8, 0);
+    dv.setInt32(mo + 12, c); dv.setInt32(mo + 16, d);  dv.setInt32(mo + 20, 0);
+    dv.setUint32(mo + 24, x >>> 0); dv.setUint32(mo + 28, y >>> 0); dv.setInt32(mo + 32, 0x40000000);
+  }
+
+  const moov = find(0, u8.byteLength, MOOV);
+  if (!moov) throw new Error("não é MP4/MOV (sem moov)");
+  let changed = 0;
+  for (const trak of kids(moov.payloadStart, moov.end)) {
+    if (trak.type !== TRAK) continue;
+    const tkhd = find(trak.payloadStart, trak.end, TKHD);
+    if (!tkhd || !isVideoTrak(trak.payloadStart, trak.end)) continue;
+    const mo = matrixOff(tkhd.payloadStart);
+    const next = (((curDeg(mo) + addDeg) % 360) + 360) % 360;
+    writeMatrix(mo, next);
+    changed++;
+  }
+  if (!changed) throw new Error("faixa de vídeo não encontrada");
+  return new Blob([u8], { type: file.type || "video/mp4" });
+}
+
+async function testWorker() {
+  if (!CONFIG.R2_UPLOAD_ENDPOINT) return;
+  const testUrl = CONFIG.R2_UPLOAD_ENDPOINT.replace(/\/upload$/, "/upload-test");
+  setUploadNote("info", "Testando Worker…");
+  try {
+    const r = await fetch(testUrl, { mode: "cors", signal: AbortSignal.timeout(8000) });
+    const txt = await r.text();
+    if (r.ok) {
+      setUploadNote("ok", "✓ Worker acessível — pode fazer upload normalmente.");
+    } else {
+      setUploadNote("err", "Worker retornou status " + r.status + " — verifique o deploy.");
+    }
+  } catch (e) {
+    setUploadNote("err", "✗ Worker inacessível (" + e.message + ") — rode: npx wrangler deploy");
+  }
+}
+
+function setupUpload() {
   if (!CONFIG.R2_UPLOAD_ENDPOINT) {
-    note.textContent = "Upload direto desativado. Cole a URL manualmente abaixo.";
+    setUploadNote("warn", "Upload direto desativado. Cole a URL manualmente abaixo.");
     $("#pickFile").disabled = true; return;
   }
-  note.textContent = "Os arquivos vão para o seu R2 e a URL é preenchida automaticamente.";
+  setUploadNote("info", 'Worker configurado. <a href="#" onclick="testWorker();return false" style="color:var(--accent-2)">Testar conexão ▸</a>');
+
   $("#pickFile").onclick = () => $("#fileInput").click();
-  $("#fileInput").onchange = async (e) => {
+  $("#fileInput").onchange = (e) => {
     const file = e.target.files[0]; if (!file) return;
-    $("#fileName").textContent = file.name;
+    pendingFile = file;
+    $("#fileName").textContent = "📎 " + file.name;
     if (!$("#fTitle").value) $("#fTitle").value = file.name.replace(/\.[^.]+$/, "");
-    await uploadToR2(file);
+    // Pré-seleciona o tipo para o usuário ver as opções de rotação corretas.
+    const t = detectType(file.name, "auto");
+    $("#fType").value = t;
+    setUploadNote("info", t === "video"
+      ? "Vídeo pronto. Escolha a <b>Rotação</b> abaixo (gravada no arquivo, sem perda) e clique em <b>Adicionar à playlist</b>."
+      : "Arquivo pronto. Clique em <b>Adicionar à playlist</b> para enviar.");
   };
 }
-function uploadToR2(file) {
+
+// Envia um blob ao R2 via Worker. Resolve com a URL pública (ou null em falha).
+function uploadToR2(blob, filename) {
   return new Promise((resolve) => {
     const prog = $("#upProg"), bar = prog.firstElementChild;
     prog.classList.add("show"); bar.style.width = "0%";
-    const fd = new FormData(); fd.append("file", file, file.name);
+    setUploadNote("info", "Enviando " + filename + "…");
+
+    const fd = new FormData(); fd.append("file", blob, filename);
     const xhr = new XMLHttpRequest();
     xhr.open("POST", CONFIG.R2_UPLOAD_ENDPOINT);
+    xhr.timeout = 120000; // 2 min timeout
+
     xhr.upload.onprogress = (ev) => {
-      if (ev.lengthComputable) bar.style.width = (ev.loaded / ev.total * 100).toFixed(0) + "%";
+      if (ev.lengthComputable) {
+        const pct = (ev.loaded / ev.total * 100).toFixed(0);
+        bar.style.width = pct + "%";
+        setUploadNote("info", "Enviando… " + pct + "%");
+      }
     };
+
     xhr.onload = () => {
       prog.classList.remove("show");
       if (xhr.status < 200 || xhr.status >= 300) {
-        toast(xhr.status === 404
-          ? "Upload indisponível (Worker não publicado). Use o campo URL."
-          : "Falha no upload (" + xhr.status + ")");
-        resolve(); return;
+        const msg = xhr.status === 404
+          ? "✗ Worker não publicado (404). Rode: npx wrangler deploy"
+          : xhr.status === 0
+          ? "✗ Bloqueado por CORS ou sem rede — verifique o Worker."
+          : "✗ Erro " + xhr.status + ": " + (xhr.responseText || "sem detalhes");
+        setUploadNote("err", msg);
+        toast("Falha no upload"); resolve(null); return;
       }
       try {
         const r = JSON.parse(xhr.responseText);
-        if (r.url) { $("#fUrl").value = r.url; toast("Upload concluído ✓"); }
-        else toast("Upload: resposta sem URL");
-      } catch (_) { toast("Upload: resposta inválida"); }
-      resolve();
+        if (r.url) {
+          $("#fUrl").value = r.url;
+          setUploadNote("ok", "✓ Upload concluído — já aparece em 'Enviados' abaixo.");
+          loadR2Library(); // atualiza a lista de enviados
+          resolve(r.url); return;
+        }
+        setUploadNote("err", "✗ Upload OK mas resposta sem URL: " + xhr.responseText.substring(0, 80));
+      } catch (_) {
+        setUploadNote("err", "✗ Resposta inválida do Worker: " + xhr.responseText.substring(0, 80));
+      }
+      resolve(null);
     };
-    xhr.onerror = () => { prog.classList.remove("show"); toast("Falha de rede no upload"); resolve(); };
+
+    xhr.ontimeout = () => {
+      prog.classList.remove("show");
+      setUploadNote("err", "✗ Timeout — arquivo muito grande ou Worker sem resposta.");
+      resolve(null);
+    };
+
+    xhr.onerror = () => {
+      prog.classList.remove("show");
+      setUploadNote("err", "✗ Falha de rede — Worker inacessível. Verifique se foi publicado.");
+      toast("Falha de rede no upload"); resolve(null);
+    };
+
     xhr.send(fd);
   });
 }
 
 /* =====================================================================
+   BIBLIOTECA R2 — lista, usa na playlist e exclui do servidor
+   ===================================================================== */
+const R2_BASE = (CONFIG.R2_UPLOAD_ENDPOINT || "").replace(/\/upload$/, "");
+let r2Files = [];
+
+function fmtSize(bytes) {
+  if (bytes == null) return "";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1048576) return (bytes / 1024).toFixed(0) + " KB";
+  if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + " MB";
+  return (bytes / 1073741824).toFixed(2) + " GB";
+}
+// Extrai a chave R2 a partir da URL pública (último segmento do caminho)
+function r2KeyFromUrl(u) {
+  if (!u) return null;
+  try {
+    const seg = new URL(u).pathname.split("/").filter(Boolean).pop();
+    return seg ? decodeURIComponent(seg) : null;
+  } catch (_) { return null; }
+}
+// O arquivo está no nosso bucket R2? (evita tentar excluir URLs externas)
+function isOurR2Url(u) {
+  if (!u) return false;
+  return (CONFIG.R2_PUBLIC_BASE && u.startsWith(CONFIG.R2_PUBLIC_BASE)) ||
+         u.startsWith(R2_BASE + "/r2/");
+}
+// Remove o prefixo "timestamp-rand-" que o Worker adiciona, p/ exibir nome limpo
+function prettyName(key) {
+  return (key || "").replace(/^\d+-[a-z0-9]{4,8}-/i, "");
+}
+// Exclui um arquivo do R2 via Worker (no-op se a URL não for nossa)
+async function deleteFromR2(url) {
+  if (!isOurR2Url(url) || !R2_BASE) return;
+  const key = r2KeyFromUrl(url);
+  if (!key) return;
+  try {
+    await fetch(R2_BASE + "/delete", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key }),
+    });
+  } catch (e) { console.warn("deleteFromR2:", e); }
+}
+
+// url → [nomes dos aparelhos que usam]. Preenchido por loadR2Usage(); usado para
+// marcar na biblioteca quais arquivos estão em uso por OUTROS aparelhos.
+let r2Usage = new Map();
+
+async function loadR2Usage() {
+  r2Usage = new Map();
+  if (!sb || !isOnline) return;
+  try {
+    const [a, b] = await Promise.all([
+      sb.from(CONFIG.TABLE).select("url,device_id"),
+      sb.from(CONFIG.DEVICE_TABLE).select("url,device_id"),
+    ]);
+    if (a.error || b.error) return;
+    const nomes = { [CONFIG.DEFAULT_DEVICE_ID]: "Elevador 1" };
+    devices.forEach(d => { nomes[d.id] = d.name; });
+    for (const row of [...(a.data || []), ...(b.data || [])]) {
+      const lista = r2Usage.get(row.url) || [];
+      lista.push(nomes[row.device_id] || "outro aparelho");
+      r2Usage.set(row.url, lista);
+    }
+  } catch (_) {}
+}
+
+async function loadR2Library() {
+  if (!R2_BASE) return;
+  const countEl = document.getElementById("r2Count");
+  if (countEl) countEl.textContent = "carregando…";
+  try {
+    const r = await fetch(R2_BASE + "/list", { mode: "cors", signal: AbortSignal.timeout(15000) });
+    const data = await r.json();
+    r2Files = data.files || [];
+    await loadR2Usage(); // quem usa o quê, em todos os aparelhos
+    renderR2Library();
+  } catch (e) {
+    if (countEl) countEl.textContent = "erro";
+    const listEl = document.getElementById("r2List");
+    if (listEl) listEl.innerHTML = '<div class="muted" style="grid-column:1/-1">Não foi possível listar os arquivos (' + (e.message || e) + ').</div>';
+  }
+}
+
+function renderR2Library() {
+  const listEl  = document.getElementById("r2List");
+  const countEl = document.getElementById("r2Count");
+  const emptyEl = document.getElementById("r2Empty");
+  if (!listEl) return;
+  if (countEl) countEl.textContent = r2Files.length + (r2Files.length === 1 ? " arquivo" : " arquivos");
+  if (emptyEl) emptyEl.style.display = r2Files.length ? "none" : "block";
+  const usados = new Set(allItems.map(i => i.url));
+  listEl.innerHTML = "";
+  r2Files.forEach(f => {
+    const isVideo = /^video\//.test(f.type) || detectType(f.url, "auto") === "video";
+    const type  = isVideo ? "video" : "image";
+    const inUse = usados.has(f.url);
+    // Uso em OUTROS aparelhos (r2Usage) — sem isso o arquivo parece livre aqui
+    // e excluí-lo quebraria a playlist do outro aparelho.
+    const outros = (r2Usage.get(f.url) || []).filter(n => n !== deviceName);
+    const el = document.createElement("div");
+    el.className = "r2card";
+    el.innerHTML =
+      '<div class="r2thumb">' +
+        (type === "video"
+          ? '<video src="' + f.url + '#t=0.3" muted preload="metadata"></video>'
+          : '<img src="' + f.url + '" alt="" loading="lazy">') +
+        '<span class="r2type ' + type + '">' + (type === "video" ? "VÍDEO" : "FOTO") + "</span>" +
+        (inUse ? '<span class="r2inuse">na playlist</span>' : "") +
+      "</div>" +
+      '<div class="r2body">' +
+        '<div class="r2name">' + escapeHtml(prettyName(f.key)) + "</div>" +
+        '<div class="r2meta">' + fmtSize(f.size) +
+          (outros.length
+            ? ' · <span style="color:var(--warn)">em uso: ' + escapeHtml([...new Set(outros)].join(", ")) + "</span>"
+            : "") +
+        "</div>" +
+        '<div class="r2acts">' +
+          (inUse
+            ? '<button class="btn ghost sm" disabled>✓ Na playlist</button>'
+            : '<button class="btn green sm" data-act="use">➕ Usar</button>') +
+          '<button class="btn danger sm" data-act="del" title="Excluir do servidor">🗑</button>' +
+        "</div>" +
+      "</div>";
+    const useBtn = el.querySelector('[data-act="use"]');
+    if (useBtn) useBtn.onclick = () => addR2ToPlaylist(f);
+    el.querySelector('[data-act="del"]').onclick = () => deleteR2File(f);
+    listEl.appendChild(el);
+  });
+}
+
+async function addR2ToPlaylist(f) {
+  if (!sb) { toast("Sem conexão"); return; }
+  const type = (/^video\//.test(f.type) || detectType(f.url, "auto") === "video") ? "video" : "image";
+  const maxPos = allItems.reduce((m, i) => Math.max(m, i.position || 0), 0);
+  const { error } = await sb.from(tblVideos()).insert({
+    title: prettyName(f.key), url: f.url, type, device_id: deviceId,
+    duration: type === "image" ? 10 : null, active: true, rotation: 0, position: maxPos + 1,
+  });
+  if (error) { toast("Erro: " + error.message); return; }
+  toast("Adicionado à playlist ✓");
+  await loadAll();
+  renderR2Library();
+}
+
+async function deleteR2File(f) {
+  // Checa TODOS os aparelhos, não só o atual: apagar um arquivo usado por outro
+  // aparelho deixa a playlist dele apontando para o nada (erro 404 no player).
+  const usadoPor = await urlEmUsoPorOutros(f.url, null);
+  if (usadoPor === null) {
+    if (!confirm("Sem conexão para verificar se outro aparelho usa este arquivo.\n\n" +
+                 "Excluir mesmo assim?")) return;
+  } else if (usadoPor.length) {
+    alert("Não dá para excluir: este arquivo está na playlist de " +
+          [...new Set(usadoPor)].join(", ") + ".\n\n" +
+          "Remova a mídia da playlist desse(s) aparelho(s) primeiro — " +
+          "senão a exibição deles ficaria com erro.");
+    return;
+  }
+  if (!confirm("Excluir DEFINITIVAMENTE do servidor?\n\n" + prettyName(f.key) +
+               "\n\nNão dá para desfazer.")) return;
+  // 1. Remove da playlist (Supabase) tudo que usa esta URL
+  if (sb) {
+    const refs = allItems.filter(i => i.url === f.url);
+    for (const it of refs) { try { await sb.from(tblVideos()).delete().eq("id", it.id); } catch (_) {} }
+  }
+  // 2. Limpa o blob do cache local
+  await dropVideoCache(f.url);
+  // 3. Exclui do R2
+  try {
+    const r = await fetch(R2_BASE + "/delete", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: f.key }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || data.error) { toast("Erro ao excluir do R2: " + (data.error || r.status)); return; }
+    toast("🗑 Excluído do servidor");
+  } catch (e) { toast("Falha ao excluir: " + (e.message || e)); return; }
+  await loadAll();
+  await loadR2Library();
+}
+
+/* =====================================================================
    LETREIRO / AVISOS (tabela settings)
    ===================================================================== */
-let settings = { marquee: "", marquee_active: true };
+const SETTINGS_DEFAULTS = {
+  marquee: "", marquee_active: true,
+  clock_show_sec: 10, clock_hide_sec: 20,
+  marquee_show_sec: 10, marquee_hide_sec: 20,
+};
+let settings = { ...SETTINGS_DEFAULTS };
+
+function populateSettingsInputs() {
+  if (!$("#mqInput")) return;
+  $("#mqInput").value      = settings.marquee || "";
+  $("#mqActive").checked   = settings.marquee_active !== false;
+  $("#clockShowSec").value = settings.clock_show_sec    ?? 10;
+  $("#clockHideSec").value = settings.clock_hide_sec    ?? 20;
+  $("#mqShowSec").value    = settings.marquee_show_sec  ?? 10;
+  $("#mqHideSec").value    = settings.marquee_hide_sec  ?? 20;
+}
 
 async function loadSettings() {
   if (!sb || !isOnline) {
     const cached = loadSettingsCache();
-    if (cached) settings = cached;
-    if ($("#mqInput")) {
-      $("#mqInput").value   = settings.marquee || "";
-      $("#mqActive").checked = settings.marquee_active !== false;
-    }
+    if (cached) settings = { ...settings, ...cached };
+    populateSettingsInputs();
     renderMarquee(); return;
   }
   try {
-    const { data, error } = await sb.from("settings").select("*").eq("id", 1).maybeSingle();
+    // Elevador 1 = linha id=1 da tabela legada (exatamente como o APK antigo
+    // lê). Demais aparelhos = uma linha por device_id em `device_settings`.
+    const q = sb.from(tblSettings()).select("*");
+    const { data, error } = await (isLegacyDevice()
+      ? q.eq("id", 1)
+      : q.eq("device_id", deviceId)).maybeSingle();
     if (error) console.warn("settings:", error.message);
-    else if (data) { settings = data; saveSettingsCache(settings); }
+    else if (data) { settings = { ...settings, ...data }; saveSettingsCache(settings); }
+    else { settings = { ...SETTINGS_DEFAULTS }; } // aparelho novo, ainda sem avisos
   } catch (_) {}
-  if ($("#mqInput")) {
-    $("#mqInput").value   = settings.marquee || "";
-    $("#mqActive").checked = settings.marquee_active !== false;
-  }
+  populateSettingsInputs();
   renderMarquee();
 }
-function renderMarquee() {
-  const bar = $("#marquee"); if (!bar) return;
-  const txt = (settings.marquee || "").trim();
-  if (!txt || settings.marquee_active === false) { bar.classList.remove("show"); return; }
-  const span = $("#mqText");
-  span.textContent = txt;
-  bar.classList.add("show");
-  requestAnimationFrame(() => {
-    span.style.animationDuration = Math.max(10, (span.scrollWidth || 800) / 110) + "s";
-  });
+
+/* ---- Ciclo de visibilidade (entra/sai em loop) — relógio/clima e letreiro ---- */
+let clockCycleTimer = null, marqueeCycleTimer = null;
+function applyVisibilityCycle(el, showSec, hideSec, which) {
+  clearTimeout(which === "clock" ? clockCycleTimer : marqueeCycleTimer);
+  el.classList.remove("cycle-hidden");
+  const showMs = Math.max(1, Number(showSec ?? 10)) * 1000;
+  const hideMs = Math.max(0, Number(hideSec ?? 20)) * 1000;
+  if (hideMs <= 0) return; // 0 = sempre visível, sem ciclo
+  const tick = (visible) => {
+    el.classList.toggle("cycle-hidden", !visible);
+    const id = setTimeout(() => tick(!visible), visible ? showMs : hideMs);
+    if (which === "clock") clockCycleTimer = id; else marqueeCycleTimer = id;
+  };
+  const id = setTimeout(() => tick(false), showMs);
+  if (which === "clock") clockCycleTimer = id; else marqueeCycleTimer = id;
 }
+function applyOverlayCycles() {
+  applyVisibilityCycle($("#infoWidget"), settings.clock_show_sec,   settings.clock_hide_sec,   "clock");
+  applyVisibilityCycle($("#marquee"),    settings.marquee_show_sec, settings.marquee_hide_sec, "marquee");
+}
+
+function renderMarquee() {
+  const bar = $("#marquee");
+  if (bar) {
+    const txt = (settings.marquee || "").trim();
+    if (!txt || settings.marquee_active === false) {
+      bar.classList.remove("show");
+    } else {
+      const span = $("#mqText");
+      span.textContent = txt;
+      bar.classList.add("show");
+      requestAnimationFrame(() => {
+        span.style.animationDuration = Math.max(10, (span.scrollWidth || 800) / 110) + "s";
+      });
+    }
+  }
+  applyOverlayCycles();
+}
+// Grava as settings do aparelho atual na tabela certa.
+// Elevador 1: linha id=1 da tabela legada (o CHECK do banco só permite id=1).
+// Demais: uma linha por device_id em `device_settings`.
+function settingsUpsert(fields) {
+  const row = { ...fields, updated_at: new Date().toISOString() };
+  if (isLegacyDevice())
+    return sb.from(CONFIG.SETTINGS_TABLE).upsert({ id: 1, ...row });
+  return sb.from(CONFIG.DEVICE_SETTINGS_TABLE)
+    .upsert({ device_id: deviceId, ...row }, { onConflict: "device_id" });
+}
+
 async function saveMarquee() {
   if (!sb) { toast("Sem conexão"); return; }
   const text   = $("#mqInput").value.trim();
   const active = $("#mqActive").checked;
-  const { error } = await sb.from("settings").upsert({ id: 1, marquee: text, marquee_active: active, updated_at: new Date().toISOString() });
+  const { error } = await settingsUpsert({ marquee: text, marquee_active: active });
   if (error) { toast("Erro ao salvar: " + error.message); return; }
   settings.marquee = text; settings.marquee_active = active;
   saveSettingsCache(settings);
   renderMarquee(); toast("Aviso salvo ✓");
 }
+async function saveOverlayTimings() {
+  if (!sb) { toast("Sem conexão"); return; }
+  const clockShow = Math.max(1, parseInt($("#clockShowSec").value, 10) || 10);
+  const clockHide = Math.max(0, parseInt($("#clockHideSec").value, 10) || 0);
+  const mqShow    = Math.max(1, parseInt($("#mqShowSec").value, 10) || 10);
+  const mqHide    = Math.max(0, parseInt($("#mqHideSec").value, 10) || 0);
+  const { error } = await settingsUpsert({
+    clock_show_sec: clockShow, clock_hide_sec: clockHide,
+    marquee_show_sec: mqShow, marquee_hide_sec: mqHide,
+  });
+  if (error) { toast("Erro ao salvar: " + error.message); return; }
+  Object.assign(settings, {
+    clock_show_sec: clockShow, clock_hide_sec: clockHide,
+    marquee_show_sec: mqShow, marquee_hide_sec: mqHide,
+  });
+  saveSettingsCache(settings);
+  renderMarquee();
+  toast("Tempos salvos ✓");
+}
 function subscribeSettings() {
   if (!sb || settingsRtCh) return;
-  settingsRtCh = sb.channel("settings-rt")
-    .on("postgres_changes", { event: "*", schema: "public", table: "settings" }, (p) => {
+  // Filtro por aparelho: o Elevador 1 só ouve a linha id=1 (a dele), e cada
+  // aparelho novo só ouve a sua. Sem isso, o letreiro de um vazaria no outro.
+  settingsRtCh = sb.channel("settings-rt-" + deviceId)
+    .on("postgres_changes", {
+      event: "*", schema: "public", table: tblSettings(),
+      filter: isLegacyDevice() ? "id=eq.1" : "device_id=eq." + deviceId,
+    }, (p) => {
       if (p.new) {
-        settings = p.new;
+        settings = { ...settings, ...p.new };
         saveSettingsCache(settings);
         renderMarquee();
-        if ($("#admin").classList.contains("open")) {
-          $("#mqInput").value   = settings.marquee || "";
-          $("#mqActive").checked = settings.marquee_active !== false;
-        }
+        if ($("#admin").classList.contains("open")) populateSettingsInputs();
       }
     })
     .subscribe();
@@ -892,13 +2355,17 @@ function renderList() {
     const isCached  = _objUrls.has(item.url);
     const el = document.createElement("div");
     el.className = "item" + (item.active ? "" : " inactive") + (isPlaying ? " playing" : "");
+    const rot = item.rotation || 0;
     el.innerHTML =
       '<div class="thumb">' + (type === "image" ? "🖼️" : "🎬") +
-        (isPlaying ? '<span class="liveTag">● NO AR</span>' : "") + "</div>" +
+        (isPlaying ? '<span class="liveTag">● NO AR</span>' : "") +
+        (rot ? '<span class="rotTag">↻' + rot + '°</span>' : "") +
+      "</div>" +
       '<div class="meta">' +
         '<div class="t">' + escapeHtml(item.title || "Sem título") +
           ' <span class="tag ' + type + '">' + (type === "image" ? "IMG " + (item.duration || 10) + "s" : "VÍDEO") + "</span>" +
           (isCached ? ' <span class="tag cached">💾 offline</span>' : "") +
+          (type === "video" && item.has_sound ? ' <span class="tag" style="background:rgba(59,130,246,.2);color:#93c5fd">🔊 Som</span>' : "") +
         "</div>" +
         '<div class="s">' + escapeHtml(item.url) + "</div>" +
       "</div>" +
@@ -906,23 +2373,33 @@ function renderList() {
         '<button class="btn sm ghost" data-act="up" ' + (i === 0 ? "disabled" : "") + ">▲</button>" +
         '<button class="btn sm ghost" data-act="down" ' + (i === sorted.length - 1 ? "disabled" : "") + ">▼</button>" +
         '<button class="btn sm ' + (item.active ? "ghost" : "green") + '" data-act="toggle">' + (item.active ? "⏸ Pausar" : "▶ Ativar") + "</button>" +
+        (type === "video"
+          ? '<button class="btn sm ' + (item.has_sound ? "primary" : "ghost") + '" data-act="sound" title="' +
+            (item.has_sound ? "Com som — clique para mutar" : "Mudo — clique para ativar som") + '">' +
+            (item.has_sound ? "🔊 Som" : "🔇 Mudo") + "</button>"
+          : "") +
+        '<button class="btn sm ghost" data-act="rotate" title="Girar 90° (atual: ' + rot + '°)">↻ ' + rot + '°</button>' +
         '<button class="btn sm ghost" data-act="edit">✎</button>' +
         '<button class="btn sm danger" data-act="del">🗑</button>' +
       "</div>";
-    el.querySelector('[data-act="up"]').onclick    = () => move(item, -1);
-    el.querySelector('[data-act="down"]').onclick  = () => move(item, 1);
+    el.querySelector('[data-act="up"]').onclick     = () => move(item, -1);
+    el.querySelector('[data-act="down"]').onclick   = () => move(item, 1);
     el.querySelector('[data-act="toggle"]').onclick = () => toggleActive(item);
-    el.querySelector('[data-act="edit"]').onclick  = () => startEdit(item);
-    el.querySelector('[data-act="del"]').onclick   = () => del(item.id);
+    const soundBtn = el.querySelector('[data-act="sound"]');
+    if (soundBtn) soundBtn.onclick = () => toggleSound(item);
+    el.querySelector('[data-act="rotate"]').onclick = () => rotateItem(item);
+    el.querySelector('[data-act="edit"]').onclick   = () => startEdit(item);
+    el.querySelector('[data-act="del"]').onclick    = () => del(item.id);
     list.appendChild(el);
   });
 }
 function startEdit(item) {
   editingId = item.id;
-  $("#fUrl").value   = item.url;
-  $("#fTitle").value = item.title || "";
-  $("#fType").value  = item.type || "auto";
-  $("#fDur").value   = item.duration || 10;
+  $("#fUrl").value      = item.url;
+  $("#fTitle").value    = item.title || "";
+  $("#fType").value     = item.type || "auto";
+  $("#fDur").value      = item.duration || 10;
+  $("#fRotation").value = item.rotation || 0;
   $("#saveBtn").textContent   = "✔ Salvar alterações";
   $("#addTitle").textContent  = "Editar mídia";
   const h = $("#editHint");
@@ -936,8 +2413,13 @@ function cancelEdit() {
   $("#addTitle").textContent = "Adicionar mídia";
 }
 function clearForm() {
-  $("#fUrl").value = ""; $("#fTitle").value = ""; $("#fType").value = "auto"; $("#fDur").value = 10;
+  $("#fUrl").value      = "";
+  $("#fTitle").value    = "";
+  $("#fType").value     = "auto";
+  $("#fDur").value      = 10;
+  $("#fRotation").value = 0;
   $("#fileName").textContent = "Nenhum arquivo selecionado";
+  pendingFile = null;
 }
 
 /* =====================================================================
@@ -963,6 +2445,9 @@ function openAdmin()  {
   $("#admin").classList.add("open");
   $("#infoWidget").classList.add("hide");
   loadAll();
+  loadDevices();          // atualiza a lista de aparelhos (pode ter mudado em outro painel)
+  loadAutoStartSetting(); // atualiza o toggle de auto-start ao abrir
+  loadR2Library();        // carrega a biblioteca de enviados (R2)
 }
 function closeAdmin() {
   $("#admin").classList.remove("open");
@@ -982,17 +2467,26 @@ $("#cornerHit").addEventListener("click", () => {
    TECLADO / CONTROLE FIRE TV
    ===================================================================== */
 document.addEventListener("keydown", (e) => {
+  // Não intercepta nenhum atalho enquanto o usuário digita em input/textarea
+  const active = document.activeElement;
+  const isTyping = active && (
+    active.tagName === "INPUT" ||
+    active.tagName === "TEXTAREA" ||
+    active.isContentEditable
+  );
+
   if (e.keyCode === 82 || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "a")) {
+    if (isTyping) return; // deixa r/R ser digitado normalmente
     e.preventDefault();
     if (!$("#admin").classList.contains("open")) openPin();
     return;
   }
   if (e.key === "Escape" || e.keyCode === 27) {
-    if ($("#pin").classList.contains("open")) closePin();
-    else if ($("#admin").classList.contains("open")) closeAdmin();
+    if ($("#pin").classList.contains("open")) { closePin(); return; }
+    if (!isTyping && $("#admin").classList.contains("open")) closeAdmin();
     return;
   }
-  if (!$("#admin").classList.contains("open") && started) {
+  if (!isTyping && !$("#admin").classList.contains("open") && started) {
     if (e.key === "ArrowRight") next();
     if (e.key === "MediaPlayPause" || e.key === " ") vid.paused ? vid.play() : vid.pause();
   }
@@ -1017,11 +2511,18 @@ async function keepAwake() {
 /* =====================================================================
    EVENT LISTENERS
    ===================================================================== */
-$("#startBtn").addEventListener("click", () => startPlayback(true));
-$("#tapStart").addEventListener("click", (e) => { if (e.target.id === "tapStart") startPlayback(true); });
+$("#startBtn").addEventListener("click", () => startPlayback());
+$("#tapStart").addEventListener("click", (e) => { if (e.target.id === "tapStart") startPlayback(); });
 $("#saveBtn").addEventListener("click", addOrUpdate);
 $("#closeAdmin").addEventListener("click", closeAdmin);
 $("#reloadBtn").addEventListener("click", loadAll);
+// Botão de rotação global: cicla 0° → 90° → 270° → 0°
+$("#screenRotBtn").addEventListener("click", () => {
+  const seq = [0, 90, 270];
+  const next = seq[(seq.indexOf(globalRotation) + 1) % seq.length];
+  applyGlobalRotation(next);
+  toast("Tela: " + (next === 0 ? "Landscape (horizontal)" : next === 90 ? "Portrait ↻ direita" : "Portrait ↺ esquerda"));
+});
 $("#coverToggle").addEventListener("click", () => {
   coverMode = !coverMode;
   // cover = padrão (vertical preenche a tela); contain = adiciona barras
@@ -1029,8 +2530,24 @@ $("#coverToggle").addEventListener("click", () => {
   $("#coverToggle").textContent = coverMode ? "⛶ Cover" : "⬚ Contain";
 });
 document.querySelectorAll("#pinPad button").forEach(b => b.onclick = () => pinPress(b.dataset.k));
+// Aparelho: trocar o aparelho deste app / cadastrar um novo
+$("#devSelect").addEventListener("change", (e) => switchDevice(e.target.value));
+$("#devAddBtn").addEventListener("click", createDevice);
+$("#devNewName").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); createDevice(); } });
 $("#mqSave").addEventListener("click", saveMarquee);
 $("#mqClear").addEventListener("click", () => { $("#mqInput").value = ""; $("#mqInput").focus(); });
+$("#visSave").addEventListener("click", saveOverlayTimings);
+// Biblioteca R2 (enviados): botão atualizar
+{ const _r = document.getElementById("r2Refresh"); if (_r) _r.addEventListener("click", loadR2Library); }
+// Limpar cache (card Dispositivo)
+{ const _cc = document.getElementById("clearCacheBtn"); if (_cc) _cc.addEventListener("click", clearMediaCache); }
+// Toggle de auto-start no card de Dispositivo
+document.getElementById("autoStartToggle").addEventListener("change", (e) => {
+  const label = document.getElementById("autoStartLabel");
+  label.textContent = e.target.checked ? "✅ Ativo" : "⛔ Desativado";
+  label.style.color  = e.target.checked ? "var(--green)" : "var(--danger)";
+  setAutoStart(e.target.checked);
+});
 
 /* =====================================================================
    INICIALIZAÇÃO — offline-first
@@ -1044,33 +2561,68 @@ async function init() {
   $("#player").classList.remove("contain");
   $("#coverToggle").textContent = "⛶ Cover";
 
+  // Restaura rotação global da tela salva (persiste após reinicialização)
+  const savedRot = parseInt(localStorage.getItem(CACHE_NS + "_scrrot") || "0", 10);
+  applyGlobalRotation(savedRot || 0);
+
+  // Restaura correção de relógio salva (Fire TV sem RTC pode iniciar com data/hora errada)
+  clockOffsetMs = parseInt(localStorage.getItem(CACHE_NS + "_clockoffset") || "0", 10);
+  // Restaura fuso horário salvo (corrige exibição se o fuso do Fire TV estiver errado)
+  displayTZ = localStorage.getItem(CACHE_NS + "_tz") || null;
+
   tickClock(); setInterval(tickClock, 1000);
   keepAwake();
   setupUpload();
 
-  // Passo 1: carrega cache local
+  // Passo 0: qual aparelho é este? (Elevador 1, Totem 1…)
+  // Fica salvo no localStorage — a tela de escolha só aparece na 1ª abertura.
+  migrateLegacyCache();
+  deviceId   = localStorage.getItem(CACHE_NS + "_devid");
+  deviceName = localStorage.getItem(CACHE_NS + "_devname") || "";
+  devices    = loadDevicesCache();
+  if (!deviceId) {
+    if (isOnline) await loadDevices();          // busca a lista antes de perguntar
+    else if (!devices.length) await loadDevices(); // offline: cai no aparelho padrão
+    deviceId = await askDevice();               // bloqueia até escolherem
+  }
+  loadDevices(); // background — mantém a lista/rótulos atualizados
+  renderDeviceUI();
+
+  // Passo 1: carrega cache local (deste aparelho)
   allItems = loadPlaylistCache();
   const cachedCfg = loadSettingsCache();
-  if (cachedCfg) settings = cachedCfg;
+  if (cachedCfg) settings = { ...settings, ...cachedCfg };
   rebuildPlaylist();
   renderMarquee();
 
-  // Passo 2: inicia reprodução imediatamente se tiver cache
+  // Passo 2: inicia reprodução imediatamente
+  // No APK (Capacitor WebView) o autoplay sempre funciona — nunca mostra tapStart
+  const isCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  started = true;
+  $("#tapStart").style.display = "none";
   if (allItems.length) {
-    started = true;
-    $("#tapStart").style.display = "none";
-    idx = 0;
+    // Retoma de onde parou (após queda de energia / reinício do Fire TV)
+    const lastId = localStorage.getItem(CACHE_NS + "_lastid");
+    const resumeIdx = lastId ? playlist.findIndex(i => String(i.id) === String(lastId)) : -1;
+    idx = resumeIdx >= 0 ? resumeIdx : 0;
     await playCurrent();
-    setTimeout(() => {
-      if (vid.paused && imgEl.style.display === "none") {
-        started = false; $("#tapStart").style.display = "flex";
-      }
-    }, 1500);
-  } else {
-    // Sem cache: esconde tapStart, mostra tela vazia até ter conteúdo
-    started = true;
-    $("#tapStart").style.display = "none";
+    if (!isCapacitor) {
+      // No navegador comum: se vídeo não iniciou sozinho, mostra botão de toque
+      setTimeout(() => {
+        if (vid.paused && imgEl.style.display === "none") {
+          started = false; $("#tapStart").style.display = "flex";
+        }
+      }, 1500);
+    } else {
+      // No APK: se falhou (improvável), tenta novamente após 2 s
+      setTimeout(async () => {
+        if (vid.paused && imgEl.style.display === "none") {
+          await playCurrent();
+        }
+      }, 2000);
+    }
   }
+  // Sem cache: playlist vazia — aguarda loadAll() preencher e rebuildPlaylist()/playCurrent() iniciar
 
   // Passo 3: clima (não bloqueia)
   initWeather();
@@ -1079,12 +2631,21 @@ async function init() {
   if (isOnline) {
     await loadAll();
     await loadSettings();
-    cacheAllVideos(); // background — não aguarda
+    cacheAllMedia(); // background — não aguarda (vídeos + imagens)
     subscribeRealtime();
     subscribeSettings();
   } else {
     toast("Modo offline — reproduzindo do cache");
   }
+
+  // Passo 5: rede de segurança — re-sincroniza a cada 5 min quando online.
+  // Corrige qualquer evento Realtime que tenha se perdido (socket meio-aberto após o elevador subir/descer)
+  // e limpa blobs órfãos. loadAll() não interrompe a mídia em reprodução.
+  setInterval(() => {
+    if (isOnline && sb) {
+      loadAll().then(() => cacheAllMedia());
+    }
+  }, 5 * 60 * 1000);
 }
 
 init();
